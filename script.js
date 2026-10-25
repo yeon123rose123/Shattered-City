@@ -72,7 +72,7 @@ const CARDS=[
   const c=[];G.areas.forEach((a,i)=>{if(a.cracks.length)c.push(i+1)});
   if(!c.length){log('저항하는 균열: 균열이 없어 효과 없음');return}
   const n=c[rnd(c.length)-1];G.fx.resist=n;G.fx.note=`${SIDE(n)}에서 판정 시 주사위 2번, 낮은 값 적용`;log('저항하는 균열: '+G.fx.note)}},
- {name:'잘못된 군중',desc:'이번 라운드에 모든 지역의 협력 보너스가 지역에 있는 추적자 수와 관계없이 +1로 고정된다.',set(){G.fx.crowd=true}},
+ {name:'잘못된 군중',desc:'이번 라운드에 모든 지역의 협력 보너스가 본인을 제외하고 지역에 있는 추적자 수에 상관없이 +1로 고정된다. (지역에 혼자 있을 때는 적용되지 않는다)',set(){G.fx.crowd=true}},
  {name:'불신의 공기',draw:true,desc:'지역 1개를 추첨한다. 이번 라운드에 해당 지역의 협력 보너스가 본인을 제외하고 지역에 함께 있는 추적자 1명당 판정 -1로 바뀐다.',set(){const n=rnd(7);G.fx.distrust=n;G.fx.note=`${SIDE(n)}: 협력 보너스가 추적자 1명당 -1로 변경`;log('불신의 공기: '+G.fx.note)}},
  {name:'환각의 잔영',desc:'이번 라운드에 대성공으로 균열을 소멸시켜도 대성공 보너스인 SAN +1 회복 효과가 무시된다.',set(){G.fx.noGreatHeal=true}}
 ];
@@ -107,7 +107,7 @@ function dbgHtml(){
 function dbgCard(i){if(i==='')return;const c=CARDS[+i];G.deck=G.deck.filter(x=>x!==c);G.deck.unshift(c);log(`[테스트] 다음 라운드 카드: ${c.name}`);render()}
 function crackPop(){
  const E=G.evd;
- pop({k:'ev',title:`${G.round}라운드 · 사건 단계`,spin:E.spins.map(k=>`개수: ${k}개`),
+ pop({k:'ev',title:`${G.round}라운드 · 사건 단계`,spin:[`개수: ${E.spins.reduce((a,b)=>a+b,0)}개`],
   areas:Object.keys(E.placed).map(Number).sort((a,b)=>a-b).map(n=>`${SIDE(n)}: ${E.placed[n]}`),
   rest:Object.keys(E.rest).map(Number).sort((a,b)=>a-b).map(n=>`${SIDE(n)}: 약화된 균열 회복 ${E.rest[n]}`),
   lost:E.lost});
@@ -220,13 +220,13 @@ function judgeCore(p,no,id,cost,free){
  if(!canJudge(no)){if(free)log('혼자서는 안 된다: 지역에 추적자가 2명 미만이라 판정을 시도하지 못했다');return false}
  if(!free)p.act-=cost;G.judged.add(id);
  const f=G.fx,cnt=no===p.loc?G.players.filter(q=>q!==p&&q.loc===p.loc).length:0;
- const coop=f.crowd?1:(f.distrust===no?-cnt:cnt);
+ const coop=f.crowd?(cnt>0?1:0):(f.distrust===no?-cnt:cnt);
  const pen=p.k==='pilot'&&p.stay>=2&&p.loc===p.last?1:0;
  const bonus=coop+p.spot-pen,wasWeak=c.weak,mirror=!!f.mirror,notes=[];
  const fails=r=>c.weak?(mirror?r>=5:r<=2):(mirror?r>=4:r<=3);
  const roll=()=>{if(f.resist===no){const a1=rnd(6),a2=rnd(6);notes.push(`저항하는 균열: 주사위 ${a1}, ${a2} 중 낮은 값 적용`);return Math.min(a1,a2)}return rnd(6)};
  if(mirror)notes.push('거울 속의 남자: 판정 범위 반전');
- if(f.crowd)notes.push('잘못된 군중: 협력 보너스 +1 고정');
+ if(f.crowd)notes.push('잘못된 군중: 같은 지역에 다른 추적자가 있으면 협력 보너스 +1 고정');
  if(f.distrust===no)notes.push('불신의 공기: 같은 지역 추적자 1명당 판정 -1');
  const raw=roll(),spotV=p.spot;let rr=null,mir=false;let r=Math.max(1,Math.min(6,raw+bonus)),txt=`🎲 ${raw}${bonus?(bonus>0?' +':' ')+bonus:''}`;
  if(fails(r)&&p.area===p.loc){const rr0=roll(),r2=Math.max(1,Math.min(6,rr0+bonus));rr=rr0;mir=mirror;r=mir?Math.min(r,r2):Math.max(r,r2);txt+=` / AREA 재굴림 ${r2}`}
@@ -324,10 +324,10 @@ function showRules(){document.getElementById('modal').innerHTML=`<div class='ove
 function selPick(k){SEL.picks.push(k);if(SEL.picks.length>=SEL.count){const pk=SEL.picks;SEL=null;startGame(pk)}render()}
 function renderSel(){
  const n=SEL.picks.length;
- return `<div class="card"><div class="bar"><b>추적자 ${n+1} / ${SEL.count} 선택</b><button onclick="SEL=null;render()">처음으로</button></div></div>`+
+ return `<div class="card"><div class="bar"><b>추적자 ${n+1} / ${SEL.count} 선택</b><button onclick="SEL=null;render()">처음으로</button></div>${SEL.picks.length?`<div class="muted" style="margin-top:6px">${SEL.picks.map((k,i)=>`추적자 ${i+1}: ${CH.find(c=>c.k===k).name}`).join(' · ')}</div>`:''}</div>`+
  CH.map(c=>`<div class="card"><div class="bar"><b>${c.name} <span class="muted">${c.en}</span></b><button class="pri" ${SEL.picks.includes(c.k)?'disabled':''} onclick="selPick('${c.k}')">선택</button></div>
  <div class="muted">${c.pos} · 운용 난이도 ${c.diff} · SAN ${c.san} / ACT ${c.act} / AREA ${AREAS[c.area-1].name}</div>
- <details><summary>특성·능력·페널티·이상 행동</summary><p><b>특성</b> ${c.t}</p><p><b>능력</b> ${c.a}</p><p><b>페널티</b> ${c.p}</p><p><b>이상 행동</b> ${c.x}</p></details></div>`).join('');
+ <details><summary>추적자 정보</summary><p><b>특성</b> ${c.t}</p><p><b>능력</b> ${c.a}</p><p><b>페널티</b> ${c.p}</p><p><b>이상 행동</b> ${c.x}</p></details></div>`).join('');
 }
 function render(){
  const app=document.getElementById('app');
