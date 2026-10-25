@@ -1,0 +1,39 @@
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f1ebdd;--card:#fbf7ec;--ink:#2a2420;--mute:#7a6f63;--line:#d6cbb6;--acc:#8a2b2b;--ok:#2f6b4f;--warn:#b5832a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#16130f;--card:#221d17;--ink:#eadfc9;--mute:#9a8d78;--line:#3a3126;--acc:#d6574f;--ok:#6fbf94;--warn:#e0b050}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#16130f;--card:#221d17;--ink:#eadfc9;--mute:#9a8d78;--line:#3a3126;--acc:#d6574f;--ok:#6fbf94;--warn:#e0b050}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0 auto;background:var(--bg);color:var(--ink);font:15px/1.5 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;max-width:840px;padding:12px}
+h1{font-size:20px;margin:4px 0 2px;letter-spacing:.04em}
+.sub,.muted{color:var(--mute);font-size:13px}.sub{margin-bottom:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+.bar{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.gauge{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0}
+.gauge i{display:block;height:100%;background:var(--acc)}
+.wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}.map{position:relative;aspect-ratio:1/.91;flex:1 1 340px;min-width:0;max-width:600px;margin:6px 0 10px}.side{flex:1 1 200px;max-width:280px;margin:6px 0 10px}.pr{padding:6px 0;border-bottom:1px solid var(--line)}.pr.on{font-weight:700}.pr .nm{font-size:16px}.sg{height:6px;margin:3px 0 0}
+.hw{position:absolute;width:25%;height:31.8%}
+.hw.here{filter:drop-shadow(0 0 4px var(--warn))}.hw.adj{filter:drop-shadow(0 0 4px var(--ok))}
+.hx,.hx i{clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.hx{position:absolute;inset:0;width:100%;padding:0;border:0;border-radius:0;background:#e8e8e8;color:#fff}
+.hx i{position:absolute;inset:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-style:normal;font-size:12px;line-height:1.25;text-align:center}
+.hx b{font-size:14px}
+.low{color:#e5484d;font-weight:700}
+.ctr .pl{text-align:center}
+.sec{margin:16px 0}.sec b{display:block;margin-bottom:4px}.ib{padding:1px 8px;font-size:12px;margin-left:4px}
+.toast{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:20}.toast div{background:rgba(0,0,0,.88);color:#fff;padding:14px 28px;border-radius:12px;font-size:20px;text-align:center;animation:fo 1.5s forwards}.toast small{font-size:12px;opacity:.8}@keyframes fo{0%{opacity:0;transform:scale(.9)}15%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.over .card{max-height:90vh;overflow:auto}.over .card.wide{max-width:600px}.over h4{margin:10px 0 0;text-align:left}.over .card.rules{text-align:left}.rules{font-size:14px}.rules h4{margin:12px 0 4px}.rules ul{margin:0;padding-left:0;list-style:none}.rules li{margin:2px 0}
+.hw.here .hx{background:#ffd34d}.hw.here .hx i{inset:4px}.hw.adj .hx{background:#4fd18b}
+.dice{font-size:64px;line-height:1.1}.dice.roll{animation:sh .25s infinite}@keyframes sh{0%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}100%{transform:rotate(-14deg)}}
+.pl{text-align:left;font-size:14px;margin:8px 0}.pl div{padding:3px 0;border-bottom:1px solid var(--line)}
+.tok{display:inline-block;background:#fff;color:#000;border-radius:8px;padding:0 5px;font-size:12px;margin:1px;white-space:nowrap}
+.tok.cur{background:var(--warn)}.tok.ab{opacity:.5;text-decoration:line-through}
+.log{font-size:13px;color:var(--mute);max-height:150px;overflow:auto}
+.log div{padding:1px 0}.log div:first-child{color:var(--ink)}
+.over{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9}
+.over .card{width:100%;max-width:600px;text-align:center;padding:18px}
+details{margin-top:6px;font-size:13px}details p{margin:4px 0}
