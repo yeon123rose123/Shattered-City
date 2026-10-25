@@ -22,6 +22,8 @@ button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
 .hx{position:absolute;inset:0;width:100%;padding:0;border:0;border-radius:0;background:#e8e8e8;color:#fff}
 .hx i{position:absolute;inset:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-style:normal;font-size:12px;line-height:1.25;text-align:center}
 .hx b{font-size:14px}
+.foot{text-align:center;font-size:12px;color:var(--mute);margin:16px 0 8px}.foot a{color:inherit;word-break:break-all}
+.upd{max-height:260px;overflow:auto;text-align:left;font-size:13px;margin-top:6px}.upd h5{margin:12px 0 3px;font-size:13px}.upd h5:first-child{margin-top:0}.upd div{padding:1px 0}
 .low{color:#e5484d;font-weight:700}
 .ctr .pl{text-align:center}
 .sec{margin:16px 0}.sec b{display:block;margin-bottom:4px}.ib{padding:1px 8px;font-size:12px;margin-left:4px}
