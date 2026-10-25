@@ -8,73 +8,73 @@ const AREAS=[
  {n:7,name:'광장',e:'🏞️',adj:[1,2,3,4,5,6],x:37.5,y:33.7,c:'#3d3187'}
 ];
 const CH=[
- {k:'surgeon',name:'외과의사',en:'Surgeon',sh:'외',pos:'관리자',diff:.5,san:7,act:3,area:1,
-  t:'의료진 — 이 추적자가 있는 지역에서는 균열 유무와 관계없이 모든 추적자가 지원·휴식을 할 수 있다.',
-  a:'응급 치료 — ACT 소모 없이 본인 또는 같은 지역 추적자의 SAN 1 회복 (균열 무시).',
-  p:'헌신 — 휴식으로 SAN을 회복할 수 없고, 다른 추적자의 지원으로만 회복한다.',
-  x:'사명감 — 같은 지역 추적자 1명의 SAN 2 회복, 그 추적자는 다음 턴 ACT 2 감소.'},
- {k:'actress',name:'영화배우',en:'Actress',sh:'배',pos:'공급가',diff:3,san:4,act:3,area:6,
-  t:'팬 서비스 — 스포트라이트를 받은 다른 추적자가 다음 판정에서 보통 성공하면 SAN 1, 대성공하면 SAN 2 회복.',
-  a:'스포트라이트 — 영화배우의 턴이 돌아오기 전까지, 같은 지역 모든 추적자의 다음 판정 1회에 +2.',
-  p:'백스테이지 — 자신의 턴 종료 시 지역에 혼자 있으면 SAN 1 감소.',
-  x:'스크린 속의 나 — 같은 지역 추적자를 인접 지역으로 강제 이동시키고, 그 추적자는 ACT 1 감소.'},
- {k:'killer',name:'킬러',en:'Killer',sh:'킬',pos:'해결사',diff:1,san:8,act:4,area:5,
-  t:'전장 파악 — 균열이 있는 지역으로 이동할 때 필요한 ACT 1 감소 (최소 0).',
-  a:'즉시 제거 — 다음 균열 소멸의 ACT 소모가 1 늘어나는 대신(최소 2) 판정 없이 즉시 소멸.',
-  p:'임무 완수 — 능력으로 균열을 소멸시키면 SAN 1 감소.',
+ {k:'surgeon',name:'외과의사',en:'Surgeon',sh:'외',pos:'관리자',diff:0.5,san:7,act:3,area:1,
+  t:'의료진 — 이 추적자가 있는 지역에서는 균열 유무와 관계없이 모든 추적자가 지원 및 휴식을 할 수 있습니다.',
+  a:'응급 치료 — ACT를 소모하지 않고 본인 또는 같은 지역 추적자의 SAN을 1 회복시킵니다.',
+  p:'헌신 — 휴식으로 SAN을 회복할 수 없습니다.',
+  x:'사명감 — 같은 지역 추적자 1명의 SAN을 2 회복시킵니다. 해당 추적자는 다음 턴 ACT가 2 감소합니다.'},
+ {k:'actress',name:'영화배우',en:'Actress',sh:'배',pos:'공급가',diff:3.0,san:4,act:3,area:6,
+  t:'팬 서비스 — 스포트라이트를 받은 다른 추적자가 다음 판정에서 보통 성공하면 SAN을 1 회복하며, 대성공하면 SAN을 2 회복합니다.',
+  a:'스포트라이트 — 영화배우의 턴이 돌아오기 전까지, 같은 지역에 있는 모든 추적자의 다음 판정 1회에 +2 보너스를 제공합니다.',
+  p:'백스테이지 — 자신의 턴 종료 시 지역에 혼자 있으면 SAN이 1 감소합니다.',
+  x:'스크린 속의 나 — 같은 지역 추적자를 인접 지역으로 강제 이동시킵니다. 해당 추적자는 ACT가 1 감소합니다.'},
+ {k:'killer',name:'킬러',en:'Killer',sh:'킬',pos:'해결사',diff:1.0,san:8,act:4,area:5,
+  t:'전장 파악 — 균열이 있는 지역으로 이동할 때 필요한 ACT가 1 감소합니다 (최소 0).',
+  a:'즉시 제거 — 다음 균열 소멸의 ACT 소모가 1 늘어나는 대신(최소 2) 해당 균열이 판정 없이 즉시 소멸됩니다.',
+  p:'임무 완수 — 능력으로 균열을 소멸시키면 SAN이 1 감소합니다.',
   x:'충동 — 균열이 있는 지역으로 자동 이동하고 즉시 제거를 사용합니다.'},
- {k:'investor',name:'투자자',en:'Investor',sh:'투',pos:'공급가',diff:1,san:8,act:3,area:3,
-  t:'공격적인 투자 — 물자 보급을 받은 추적자가 다음 판정에서 대성공하면 본인의 다음 턴 ACT 1 증가.',
-  a:'물자 보급 — 같은 지역과 인접 지역의 모든 추적자 ACT 1 증가.',
-  p:'리스크 분담 — 보급받은 추적자가 소멸에 실패하면 본인의 다음 턴 ACT 1 감소.',
-  x:'추심 — 같은 지역 추적자 ACT 2, 인접 지역 추적자 ACT 1 감소.'},
- {k:'pilot',name:'파일럿',en:'Pilot',sh:'파',pos:'공급가',diff:2,san:6,act:4,area:2,
+ {k:'investor',name:'투자자',en:'Investor',sh:'투',pos:'공급가',diff:1.0,san:8,act:3,area:3,
+  t:'공격적인 투자 — 물자 보급을 받은 추적자가 다음 판정에서 대성공하면 본인의 다음 턴 ACT가 1 증가합니다.',
+  a:'물자 보급 — 같은 지역과 인접 지역의 모든 추적자의 ACT를 1 증가시킵니다.',
+  p:'리스크 분담 — 물자 보급을 받은 추적자가 소멸에 실패하면 본인의 다음 턴 ACT가 1 감소합니다.',
+  x:'추심 — 같은 지역의 모든 추적자의 ACT를 2 감소시키며, 인접 지역의 모든 추적자의 ACT를 1 감소시킵니다.'},
+ {k:'pilot',name:'파일럿',en:'Pilot',sh:'파',pos:'공급가',diff:2.0,san:6,act:4,area:2,
   t:'없음',
-  a:'공중 지원 — 다른 지역의 균열 소멸 시도 또는 지원 가능. 인접 지역 1 ACT, 비인접 2 ACT. 공항에 있어야 AREA 보너스.',
-  p:'역마살 — 같은 지역에 3라운드 이상 머물면 3라운드부터 판정 -1 (라운드 종료 시 위치 기준).',
-  x:'망상 비행 — 주사위 눈만큼 번호 차이가 나는 지역으로 이동. 균열이 있으면 소멸 1회 시도, 없으면 SAN 1 감소.'},
- {k:'writer',name:'작가',en:'Writer',sh:'작',pos:'전략가',diff:3,san:4,act:2,area:4,
-  t:'플롯 비틀기 — 매 라운드 위기 카드 2장을 공개해 1장은 덱 맨 아래로, 남은 1장을 발동.',
-  a:'데우스 엑스 마키나 — 판정에 실패하면 SAN 감소를 무효화하고 다음 번호 지역으로 즉시 이동.',
-  p:'관찰자 — 지원을 하거나 받을 때 ACT 1 추가 소모.',
-  x:'원고 파기 — 도서관으로 이동, 다음 턴까지 위기 카드·균열 확산 피해 무시. 대신 라운드 종료 시 붕괴도 +1.'}
+  a:'공중 지원 — 다른 지역의 균열 소멸 판정을 진행하거나 추적자를 지원할 수 있습니다. 인접 지역은 1 ACT, 비인접 지역은 2 ACT가 소모됩니다. 공항에 있어야 AREA 보너스.',
+  p:'역마살 — 같은 지역에 3라운드 이상 머물면 3라운드부터 판정이 1 감소합니다 (라운드 종료 시 위치 기준).',
+  x:'망상 비행 — 주사위 눈만큼 번호 차이가 나는 지역으로 이동한 뒤, 균열이 있으면 소멸 판정을 1회 진행하고, 균열이 없으면 SAN이 1 감소합니다.'},
+ {k:'writer',name:'작가',en:'Writer',sh:'작',pos:'전략가',diff:3.0,san:4,act:2,area:4,
+  t:'플롯 비틀기 — 라운드가 시작할 때마다 위기 카드 2장을 공개하며, 그 중 1장을 골라 효과롤 발동시킵니다.',
+  a:'데우스 엑스 마키나 — 판정에 실패하면 SAN 감소를 무효화하고 다음 번호 지역으로 즉시 이동합니다.',
+  p:'관찰자 — 다른 추적제에게 지원을 하거나 다른 추적자에게서 지원을 받을 때 ACT가 1 추가 소모됩니다.',
+  x:'원고 파기 — 즉시 도서관으로 이동하며, 다음 턴까지 위기 카드·균열 확산 피해를 무시합니다. 대신 라운드 종료 시 붕괴도가 추가로 1 증가합니다.'}
 ];
 const SIDE=n=>AREAS[n-1].name;
 const CARDS=[
- {name:'뒤틀린 도로',desc:'이번 라운드에서 이동에 2 ACT가 소모된다.',set(){G.fx.moveCost=2}},
- {name:'단절된 공기',desc:'이번 라운드에 모든 추적자는 지원 행동을 할 수 없다.',set(){G.fx.noSupport=true}},
- {name:'불안한 밤',desc:'이번 라운드에 휴식으로 SAN을 회복할 수 없다.',set(){G.fx.noRestHeal=true}},
- {name:'혼자서는 안 된다',desc:'이번 라운드에 지역에 추적자가 두 명 이상 있어야 균열 소멸 판정을 시도할 수 있다.',set(){G.fx.needTwo=true}},
- {name:'느린 시간',desc:'이번 라운드에 모든 추적자의 ACT가 1 감소한다.',set(){G.fx.actMinus=1;G.players.forEach(p=>{p.act=Math.max(0,p.act0-1)});log('느린 시간: 모든 추적자 ACT -1')}},
- {name:'끊어진 길',draw:true,desc:'광장을 제외한 지역 1개를 추첨한다. 이번 라운드에 해당 지역과 광장 사이의 이동이 통제된다.',set(){const n=rnd(6);G.fx.cut=n;G.fx.note=`${SIDE(n)} ↔ 광장 이동 통제`;log('끊어진 길: '+G.fx.note)}},
- {name:'삼켜진 지역',draw:true,desc:'지역 1개를 추첨한다. 이번 라운드에 해당 지역으로의 이동이 제한된다.',set(){const n=rnd(7);G.fx.sealed=n;G.fx.note=`${SIDE(n)}(으)로 이동 불가`;log('삼켜진 지역: '+G.fx.note)}},
- {name:'메아리치는 상처',desc:'균열이 있는 지역에 있는 모든 추적자의 SAN이 즉시 1 감소한다. 이 카드의 영향으로 SAN이 0이 된 추적자는 즉시 이상 상태에 빠진다.',set(){G.players.forEach(p=>{if(A(p.loc).cracks.length)cardSan(p,1)})}},
- {name:'불안한 군중',desc:'지역에 혼자 있는 추적자의 SAN이 즉시 1 감소한다. 이 카드의 영향으로 SAN이 0이 된 추적자는 즉시 이상 상태에 빠진다.',set(){G.players.forEach(p=>{if(G.players.filter(q=>q.loc===p.loc).length===1)cardSan(p,1)})}},
- {name:'시간이 다 됐다',draw:true,desc:'균열이 가장 많은 지역에 균열이 1개 더 발생한다. 가장 많은 지역이 2개 이상이면 그중 1개를 추첨한다.',set(){
+ {name:'뒤틀린 도로',desc:'이동에 2 ACT가 소모됩니다.',set(){G.fx.moveCost=2}},
+ {name:'단절된 공기',desc:'추적자 간 지원이 제한됩니다.',set(){G.fx.noSupport=true}},
+ {name:'불안한 밤',desc:'휴식으로 SAN을 회복할 수 없습니다.',set(){G.fx.noRestHeal=true}},
+ {name:'혼자서는 안 된다',desc:'지역에 추적자가 2명 이상 있어야 균열 소멸 판정을 시도할 수 있습니다.',set(){G.fx.needTwo=true}},
+ {name:'느린 시간',desc:'모든 추적자의 ACT가 1 감소한 채로 시작합니다.',set(){G.fx.actMinus=1;G.players.forEach(p=>{p.act=Math.max(0,p.act0-1)});log('느린 시간: 모든 추적자 ACT -1')}},
+ {name:'끊어진 길',draw:true,desc:'광장을 제외한 지역 1개를 추첨합니다. 해당 지역과 광장 사이의 이동이 제한됩니다.',set(){const n=rnd(6);G.fx.cut=n;G.fx.note=`${SIDE(n)} ↔ 광장 이동 통제`;log('끊어진 길: '+G.fx.note)}},
+ {name:'삼켜진 지역',draw:true,desc:'지역 1개를 추첨합니다. 이번 라운드에 해당 지역으로의 이동이 제한됩니다.',set(){const n=rnd(7);G.fx.sealed=n;G.fx.note=`${SIDE(n)}(으)로 이동 불가`;log('삼켜진 지역: '+G.fx.note)}},
+ {name:'메아리치는 상처',desc:'균열이 있는 지역에 있는 추적자의 SAN이 즉시 1 감소합니다. 이 카드의 영향으로 SAN이 0이 된 추적자는 즉시 이상 상태에 빠집니다.',set(){G.players.forEach(p=>{if(A(p.loc).cracks.length)cardSan(p,1)})}},
+ {name:'불안한 군중',desc:'지역에 혼자 있는 추적자의 SAN이 즉시 1 감소합니다. 이 카드의 영향으로 SAN이 0이 된 추적자는 즉시 이상 상태에 빠집니다.',set(){G.players.forEach(p=>{if(G.players.filter(q=>q.loc===p.loc).length===1)cardSan(p,1)})}},
+ {name:'시간이 다 됐다',draw:true,desc:'균열이 가장 많은 지역에 균열이 1개 더 발생합니다. 가장 많은 지역이 2개 이상이면 그중 1개를 추첨합니다.',set(){
   let mx=0;G.areas.forEach(a=>{mx=Math.max(mx,a.cracks.length)});
   if(!mx){log('시간이 다 됐다: 균열이 없어 효과 없음');return}
   const c=[];G.areas.forEach((a,i)=>{if(a.cracks.length===mx)c.push(i+1)});
   const n=c[rnd(c.length)-1];log(`시간이 다 됐다: 균열이 가장 많은 지역은 ${SIDE(n)}${c.length>1?' (동률 추첨)':''}`);addCrack(n)}},
- {name:'도시가 숨을 쉰다',desc:'모든 약화된 균열이 즉시 일반 균열로 회복된다.',set(){let k=0;G.areas.forEach(a=>a.cracks.forEach(c=>{if(c.weak){c.weak=false;k++}}));log(`도시가 숨을 쉰다: 약화된 균열 ${k}개가 일반 균열로 회복`)}},
- {name:'기억하는 방',desc:'AREA가 있는 추적자는 자신이 AREA 보너스를 받는 지역으로, AREA가 없는 추적자는 광장으로 이동한다. 이 과정에서 ACT는 소모되지 않는다.',set(){G.players.forEach(p=>{p.loc=p.area||7});log('기억하는 방: 모든 추적자가 AREA 지역으로 이동')}},
- {name:'불시착',draw:true,desc:'모든 추적자가 지역을 추첨한 뒤 해당 지역으로 강제 이동한다. 이 과정에서 ACT는 소모되지 않는다.',set(){G.players.forEach(p=>{const n=rnd(7);p.loc=n;log(`${p.name} → ${SIDE(n)}`)})}},
- {name:'강제 교환',draw:true,desc:'추적자 2명을 추첨한다. 두 추적자는 즉시 서로의 위치를 바꾸며, 이 과정에서 ACT는 소모되지 않는다.',set(){
+ {name:'도시가 숨을 쉰다',desc:'모든 약화된 균열이 즉시 일반 균열로 회복됩니다.',set(){let k=0;G.areas.forEach(a=>a.cracks.forEach(c=>{if(c.weak){c.weak=false;k++}}));log(`도시가 숨을 쉰다: 약화된 균열 ${k}개가 일반 균열로 회복`)}},
+ {name:'기억하는 방',desc:'AREA가 있는 추적자는 자신이 AREA 보너스를 받는 지역으로, AREA가 없는 추적자는 광장으로 ACT 소모 없이 즉시 이동합니다.',set(){G.players.forEach(p=>{p.loc=p.area||7});log('기억하는 방: 모든 추적자가 AREA 지역으로 이동')}},
+ {name:'불시착',draw:true,desc:'모든 추적자가 지역을 추첨한 뒤 해당 지역으로 ACT 소모 없이 즉시 이동합니다.',set(){G.players.forEach(p=>{const n=rnd(7);p.loc=n;log(`${p.name} → ${SIDE(n)}`)})}},
+ {name:'강제 교환',draw:true,desc:'추적자 2명을 추첨합니다. 두 추적자는 ACT 소모 없이 즉시 서로의 위치를 바꿉니다.',set(){
   const a=rnd(G.players.length)-1;let b;do{b=rnd(G.players.length)-1}while(b===a);
   const P=G.players[a],Q=G.players[b],pl=P.loc,ql=Q.loc;P.loc=ql;Q.loc=pl;
   log(`${P.name}: ${SIDE(pl)} → ${SIDE(ql)}`);log(`${Q.name}: ${SIDE(ql)} → ${SIDE(pl)}`)}},
- {name:'뒤바뀐 균열',draw:true,desc:'균열이 있는 지역 2곳을 추첨한다. 약화된 균열을 포함하여 두 지역의 균열 현황이 서로 바뀐다.',set(){
+ {name:'뒤바뀐 균열',draw:true,desc:'균열이 있는 지역 중 2곳을 추첨합니다. 약화된 균열을 포함하여 두 지역의 균열 현황이 서로 바뀝니다.',set(){
   const c=[];G.areas.forEach((a,i)=>{if(a.cracks.length)c.push(i+1)});
   if(c.length<2){log('균열이 있는 지역이 2곳 미만이라 효과 없음');return}
   const x=c.splice(rnd(c.length)-1,1)[0],y=c[rnd(c.length)-1],t=A(x).cracks;A(x).cracks=A(y).cracks;A(y).cracks=t;
   log(`${SIDE(x)} ↔ ${SIDE(y)} 균열 현황 교환`)}},
- {name:'거울 속의 남자',desc:'이번 라운드에 일반 균열의 판정 범위가 4·5·6 실패 / 2·3 보통 성공 / 1 대성공으로, 약화된 균열의 판정 범위가 5·6 실패 / 1~4 성공으로 바뀐다. 판정 결과 효과는 그대로이며, AREA 보너스는 더 낮은 수를 적용한다.',set(){G.fx.mirror=true}},
- {name:'저항하는 균열',draw:true,desc:'균열이 있는 지역 1개를 추첨한다. 이번 라운드에 해당 지역에서 균열 소멸을 시도하면 주사위를 두 번 굴려 더 낮은 결과로 판정한다. 협력 보너스와 AREA 보너스는 주사위를 굴린 뒤 그대로 적용한다.',set(){
+ {name:'거울 속의 남자',desc:'이번 라운드에 일반 균열의 판정 범위가 4~6 실패 / 2·3 보통 성공 / 1 대성공으로, 약화된 균열의 판정 범위가 5·6 실패 / 1~4 성공으로 바뀝니다. 판정 결과 효과는 그대로이며, AREA 보너스는 더 낮은 수를 적용합니다.',set(){G.fx.mirror=true}},
+ {name:'저항하는 균열',draw:true,desc:'균열이 있는 지역 1개를 추첨합니다. 이번 라운드에 해당 지역에서 균열 소멸을 시도하면 주사위를 두 번 굴려 더 낮은 결과로 판정합니다. 협력 보너스와 AREA 보너스는 주사위를 굴린 뒤 그대로 적용합니다.',set(){
   const c=[];G.areas.forEach((a,i)=>{if(a.cracks.length)c.push(i+1)});
   if(!c.length){log('저항하는 균열: 균열이 없어 효과 없음');return}
   const n=c[rnd(c.length)-1];G.fx.resist=n;G.fx.note=`${SIDE(n)}에서 판정 시 주사위 2번, 낮은 값 적용`;log('저항하는 균열: '+G.fx.note)}},
- {name:'잘못된 군중',desc:'이번 라운드에 모든 지역의 협력 보너스가 본인을 제외하고 지역에 있는 추적자 수에 상관없이 +1로 고정된다. (지역에 혼자 있을 때는 적용되지 않는다)',set(){G.fx.crowd=true}},
- {name:'불신의 공기',draw:true,desc:'지역 1개를 추첨한다. 이번 라운드에 해당 지역의 협력 보너스가 본인을 제외하고 지역에 함께 있는 추적자 1명당 판정 -1로 바뀐다.',set(){const n=rnd(7);G.fx.distrust=n;G.fx.note=`${SIDE(n)}: 협력 보너스가 추적자 1명당 -1로 변경`;log('불신의 공기: '+G.fx.note)}},
- {name:'환각의 잔영',desc:'이번 라운드에 대성공으로 균열을 소멸시켜도 대성공 보너스인 SAN +1 회복 효과가 무시된다.',set(){G.fx.noGreatHeal=true}}
+ {name:'잘못된 군중',desc:'이번 라운드에 모든 지역의 협력 보너스가 본인을 제외하고 지역에 있는 추적자 수에 상관없이 +1로 고정됩니다.',set(){G.fx.crowd=true}},
+ {name:'불신의 공기',draw:true,desc:'지역 1개를 추첨합니다. 이번 라운드에 해당 지역의 협력 보너스가 본인을 제외하고 지역에 함께 있는 추적자 1명당 판정 -1로 바뀝니다.',set(){const n=rnd(7);G.fx.distrust=n;G.fx.note=`${SIDE(n)}: 협력 보너스가 추적자 1명당 -1로 변경`;log('불신의 공기: '+G.fx.note)}},
+ {name:'환각의 잔영',desc:'이번 라운드에 대성공으로 균열을 소멸시켜도 대성공 보너스인 SAN +1 회복 효과가 무시됩니다.',set(){G.fx.noGreatHeal=true}}
 ];
 let G=null,SEL=null,cid=0;
 const rnd=n=>1+Math.floor(Math.random()*n);
@@ -310,25 +310,22 @@ function showInfo(i){
  const q=G.players[i],c=CH.find(x=>x.k===q.k);
  document.getElementById('modal').innerHTML=`<div class='over'><div class='card wide rules'><h3 style='text-align:center;margin:0'>${c.name} <span class='muted'>${c.en}</span></h3><div class='muted' style='text-align:center'>${c.pos} · 운용 난이도 ${c.diff} · SAN ${c.san} / ACT ${c.act} / AREA ${AREAS[c.area-1].name}</div><h4>특성</h4><p style='margin:0'>${c.t}</p><h4>능력</h4><p style='margin:0'>${c.a}</p><h4>페널티</h4><p style='margin:0'>${c.p}</p><h4>이상 행동</h4><p style='margin:0'>${c.x}</p><div style='text-align:center;margin-top:12px'><button class='pri' onclick='hideRules()'>닫기</button></div></div></div>`;
 }
-function askReset(){document.getElementById('modal').innerHTML=`<div class='over'><div class='card' style='max-width:420px'><h3>게임 초기화</h3><p class='muted'>현재 게임은 포기 처리되고 추적자 인원 선택 화면으로 돌아갑니다. 진행할까요?</p><div class='row' style='justify-content:center'><button class='pri' onclick='doReset()'>초기화</button><button onclick='hideRules()'>취소</button></div></div></div>`}
+function askReset(){document.getElementById('modal').innerHTML=`<div class='over'><div class='card' style='max-width:420px'><h3>게임 초기화</h3><p class='muted'>현재 게임은 포기 처리되고 추적자 인원 선택 화면으로 돌아갑니다.</p><div class='row' style='justify-content:center'><button class='pri' onclick='doReset()'>초기화</button><button onclick='hideRules()'>취소</button></div></div></div>`}
 function doReset(){hideRules();G=null;SEL=null;render()}
 function hideRules(){document.getElementById('modal').innerHTML=''}
 function showRules(){document.getElementById('modal').innerHTML=`<div class='over'><div class='card wide rules'><h3 style='text-align:center;margin:0'>규칙 요약</h3>
-<h4>승리 · 패배</h4><ul><li>도시 붕괴도는 15에서 시작합니다. 0이 되면 승리합니다.</li><li>붕괴도가 30에 도달하거나 모든 추적자가 이상 상태가 되면 패배합니다.</li></ul>
+<h4>승리 · 패배</h4><ul><li>도시 붕괴도는 15에서 시작합니다.</li><li>도시 붕괴도가 0에 도달하면 승리하며, 30에 도달하거나 모든 추적자가 이상 상태가 되면 패배합니다.</li></ul>
 <h4>라운드 흐름</h4><ul><li>① 사건 단계 → ② 행동 단계(추적자 순서대로 턴) → ③ 붕괴 단계 순으로 반복합니다.</li></ul>
-<h4>① 사건 단계</h4><ul><li>개수 돌림판을 돌린 뒤, 나온 개수만큼 장소 돌림판을 돌려 균열을 만듭니다. 2인은 1~2 중 1번, 3~4인은 1~2 중 2번, 5~6인은 1~3 중 2번 돌립니다.</li><li>한 지역의 균열은 최대 3개입니다. 넘치면 다음 번호 지역(7번 다음은 1번)으로, 거기도 가득이면 인접 지역 중 번호가 낮은 곳으로 분산됩니다. 모두 가득이면 균열이 사라지는 대신 붕괴도가 0.5 오릅니다.</li><li>약화된 균열이 있는 지역에 균열이 생기면 새로 생기지 않고 약화된 균열이 일반 균열로 회복됩니다.</li><li>위기 카드는 인원수와 관계없이 1장을 뽑고, 효과는 그 라운드에만 적용됩니다.</li></ul>
-<h4>② 행동 단계</h4><ul><li>추적자는 SAN(정신력), ACT(행동력), AREA(지역 보정) 스탯을 가집니다. ACT가 0이 되면 턴이 끝납니다.</li><li>이동(1 ACT): 인접 지역으로 이동합니다.</li><li>균열 소멸 판정(1 ACT): 현재 지역의 균열을 대상으로 주사위를 굴립니다. 같은 균열은 한 턴에 한 번만 시도할 수 있습니다.</li><li>지원(1 ACT): 균열이 없는 지역에서 같은 지역 추적자 1명의 SAN을 1 회복합니다.</li><li>능력 사용(ACT 소모 없음): 추적자 고유 능력이며 턴당 1회입니다.</li><li>휴식: 균열이 없는 지역에서 ACT 소모 없이 SAN을 1 회복하고 턴이 끝납니다.</li></ul>
-<h4>판정</h4><ul><li>일반 균열: 1~3 실패(약화 균열로 변하고 SAN -1), 4~5 성공(소멸), 6 대성공(소멸, SAN +1).</li><li>약화된 균열: 1~2 실패(유지), 3~6 성공(소멸).</li><li>AREA 보너스: 자신의 AREA 지역에서 실패하면 한 번 더 굴려 높은 수를 적용합니다. '거울 속의 남자' 카드가 있으면 낮은 수를 적용합니다.</li><li>협력 보너스: 같은 지역의 다른 추적자 1명당 주사위 값 +1.</li></ul>
-<h4>③ 붕괴 단계</h4><ul><li>균열 전체 개수에 따라 붕괴도가 변합니다. 0개 -2 / 1개 -1 / 2개 변화 없음 / 3개 +1 / 4개 이상 +2.</li><li>일반 균열이 있는 지역의 다음 번호 지역에 일반 균열이 1개 확산됩니다(지역당 1개까지). 약화된 균열이 있는 지역은 확산하지 않으며, 확산 대상에 약화된 균열이 있으면 일반 균열로 회복됩니다.</li><li>라운드 종료 시 SAN이 0 이하면 다음 라운드부터 이상 상태가 되어 고유한 이상 행동만 합니다. SAN이 1 이상으로 회복되면 벗어납니다.</li></ul>
+<h4>① 사건 단계</h4><ul><li>개수 돌림판을 돌린 뒤, 나온 개수만큼 장소 돌림판을 돌립니다. 돌림판을 돌려 나온 결과대로 균열이 발생합니다. 2인은 1~2 중 1번, 3~4인은 1~2 중 2번, 5~6인은 1~3 중 2번 돌립니다.</li><li>한 지역에 발생할 수 있는 균열은 최대 3개입니다. 이미 균열이 3개 있는 지역에 균열이 또 발생한다면 다음 번호 지역에 발생하며, 해당 지역도 이미 균열이 3개 있다면 인접 지역 중 번호가 낮은 지역에 발생합니다. 모든 지역에 균열이 3개 있다면 해당 균열은 발생하지 않는 대신 붕괴도가 즉시 0.5 오릅니다.</li><li>약화된 균열이 있는 지역에 균열이 추가될 때는 일반 균열이 새로 발생하지 않고, 약화된 균열이 일반 균열로 회복됩니다.</li><li>위기 카드는 인원수와 관계없이 1장을 뽑습니다. 위기 카드의 효과는 해당 라운드에만 적용되며, 라운드가 넘어가면 소멸됩니다.</li></ul>
+<h4>② 행동 단계</h4><ul><li>추적자는 SAN(정신력), ACT(행동력), AREA(지역 보정) 스탯을 가집니다. ACT가 0이 되면 자동으로 턴이 종료됩니다.</li><li>이동(1 ACT): 인접 지역으로 이동합니다.</li><li>균열 소멸 판정(1 ACT): 현재 지역의 균열을 대상으로 주사위를 굴립니다. 같은 균열은 한 턴에 한 번만 시도할 수 있습니다.</li><li>지원(1 ACT): 균열이 없는 지역에서 같은 지역 추적자 1명의 SAN을 1 회복합니다.</li><li>능력 사용(ACT 소모 없음): 추적자 고유 능력이며 턴당 1회입니다.</li><li>휴식: 균열이 없는 지역에서 ACT 소모 없이 SAN을 1 회복하고 턴이 끝납니다.</li></ul>
+<h4>판정</h4><ul><li>일반 균열: 1~3 실패(약화 균열로 변하고 SAN -1), 4~5 성공(소멸), 6 대성공(소멸, SAN +1).</li><li>약화된 균열: 1~2 실패(유지), 3~6 성공(소멸).</li><li>AREA 보너스: 해당 추적자의 AREA 지역에서 균열 소멸 판정에 실패하면 주사위를 한 번 더 굴려 더 높은 수를 적용합니다. (예외로 위기 카드 '거울 속의 남자' 의 효과가 적용되고 있을 때는 더 낮은 수를 적용합니다.)</li><li>협력 보너스: 본인을 제외하고 같은 지역에 있는 다른 추적자 1명당 주사위 값에 1이 더해집니다.</li></ul>
+<h4>③ 붕괴 단계</h4><ul><li>균열 전체 개수에 따라 붕괴도가 변합니다. 0개 -2 / 1개 -1 / 2개 변화 없음 / 3개 +1 / 4개 이상 +2.</li><li>일반 균열이 있는 지역의 다음 번호 지역에 일반 균열이 1개 확산됩니다. 약화된 균열은 확산하지 않으며, 확산의 영향을 받는 지역에 약화된 균열이 있으면 약화된 균열이 일반 균열로 회복됩니다.</li><li>라운드 종료 시 SAN이 0 이하인 추적자는 다음 라운드부터 이상 상태가 되어 고유한 이상 행동만 합니다. SAN이 1 이상으로 회복되면 이상 상태에서 벗어납니다.</li></ul>
 <div style='text-align:center;margin-top:12px'><button class='pri' onclick='hideRules()'>닫기</button></div></div></div>`}
 const UPDATES=[
- {t:'추적자 선택 확인',l:['추적자를 모두 고르면 게임 시작 여부를 묻는 확인 팝업이 나옵니다.','선택 화면 상단에 고른 추적자 이름이 표시됩니다.']},
- {t:'팝업·표시 개선',l:['사건 단계의 균열 개수를 합산해 표시합니다.','팝업 내용을 가운데 정렬하고 너비를 조정했습니다.','추적자 이름 앞 번호를 없애고 "N라운드" 표기로 통일했습니다.','메인 화면에 업데이트 내역을 추가했습니다.']},
- {t:'위기 카드 3차 묶음 (5장)',l:['거울 속의 남자, 저항하는 균열, 잘못된 군중, 불신의 공기, 환각의 잔영이 추가되었습니다.','잘못된 군중은 같은 지역에 다른 추적자가 있을 때만 협력 보너스 +1이 적용됩니다.']},
- {t:'위기 카드 2차 묶음 (8장)',l:['메아리치는 상처, 불안한 군중, 시간이 다 됐다, 도시가 숨을 쉰다, 기억하는 방, 불시착, 강제 교환, 뒤바뀐 균열이 추가되었습니다.']},
- {t:'위기 카드 1차 묶음 (7장)',l:['뒤틀린 도로, 단절된 공기, 불안한 밤, 혼자서는 안 된다, 느린 시간, 끊어진 길, 삼켜진 지역이 추가되었습니다.']},
- {t:'규칙·밸런스 조정',l:['인원별 개수 돌림판을 조정했습니다 (2인 1~2 1번 / 3~4인 1~2 2번 / 5~6인 1~3 2번).','판정 최종 결과는 1~6 범위로 고정됩니다.','이상 상태 추적자의 SAN은 0 아래로 내려갈 수 있습니다.','SAN이 최대치의 절반 이하이면 숫자가 빨간색으로 표시됩니다.','킬러의 이상 행동 충동을 수정했습니다.']},
- {t:'기본 기능',l:['추적자 6명(외과의사, 영화배우, 킬러, 투자자, 파일럿, 작가), 육각형 지도, 판정·붕괴 단계 팝업, 턴 알림, 규칙 요약, 능력 확인, 게임 초기화가 제공됩니다.']}
+ {t:'기능 추가',l:['게임에 참여할 추적자를 모두 선택한 뒤 게임 시작 여부를 묻는 확인 팝업을 추가했습니다.','추적자 선택 화면 상단에 선택한 추적자 이름이 표시되도록 추가했습니다.']},
+ {t:'표시 개선',l:['사건 단계의 균열 발생 팝업에서 균열 개수를 합산해 표시하도록 수정했습니다.','메인 화면에 업데이트 내역을 추가했습니다.','추적자의 SAN이 0 미만으로 감소하면 음수로 표기되도록 수정했습니다.','추적자의 SAN이 최대치의 절반 이하이면 숫자가 빨간색으로 표시되도록 수정했습니다.']},
+ {t:'신 컨텐츠 추가',l:['위기 카드 메아리치는 상처, 불안한 군중, 시간이 다 됐다, 도시가 숨을 쉰다, 기억하는 방, 불시착, 강제 교환, 뒤바뀐 균열이 추가되었습니다.','위기 카드 거울 속의 남자, 저항하는 균열, 잘못된 군중, 불신의 공기, 환각의 잔영이 추가되었습니다.']},
+ {t:'규칙·밸런스 조정',l:['참여 인원별 개수 돌림판을 조정했습니다 (2인 1~2 1번 / 3~4인 1~2 2번 / 5~6인 1~3 2번).','판정 최종 결과는 1~6 범위로 고정됩니다.','킬러의 이상 행동 충동을 수정했습니다. 이제 킬러는 더이상 인접 지역에 균열 1개를 발생시키지 않습니다.']},
 ];
 function updHtml(){return `<div class="card"><b>업데이트 내역</b><div class="upd">${UPDATES.map(u=>`<h5>${u.t}</h5>${u.l.map(t=>`<div>· ${t}</div>`).join('')}`).join('')}</div></div>`}
 function selPick(k){if(SEL.picks.length>=SEL.count)return;SEL.picks.push(k);render()}
@@ -361,7 +358,7 @@ function render(){
  });
  h+=`</div>${sideHtml()}</div><div class='card'><div class='bar'><b style='font-size:17px'>${p.name}</b><span style='font-size:15px'>${AREAS[p.loc-1].e} ${AREAS[p.loc-1].name}</span></div>
  <div class="bar"><span>🧠 SAN ${sanH(p)}/${p.max}${p.abnormal?' (이상)':''}</span><span>⚡ ACT ${p.act}/${p.act0}</span></div>
- <div class="muted" style="margin:4px 0 8px">${p.spot?'🔦스포트라이트 ':''}${p.armD?'🎯즉시 제거 대기 ':''}${p.arm?'🪄데우스 대기 ':''}${p.supplied?'📦보급 ':''}${p.k==='pilot'&&p.stay>=2&&p.loc===p.last?'⏳역마살 -1 ':''}· 테두리가 초록인 지역을 눌러 이동</div><div class="row">`;
+ <div class="muted" style="margin:4px 0 8px">${p.spot?'🔦스포트라이트 ':''}${p.armD?'🎯즉시 제거 대기 ':''}${p.arm?'🪄데우스 엑스 마키나 대기 ':''}${p.supplied?'📦보급 ':''}${p.k==='pilot'&&p.stay>=2&&p.loc===p.last?'⏳역마살 -1 ':''}· 테두리가 초록인 지역을 눌러 이동</div><div class="row">`;
  here.cracks.forEach(c=>{
   if(p.armD)h+=`<button class="pri" ${p.act<2?'disabled':''} onclick="doInstant(${c.id})">🎯 ${c.weak?'약화':'일반'} 즉시 제거 (2 ACT)</button>`;
   else h+=`<button class="pri" ${p.act<1||G.judged.has(c.id)||!canJudge(p.loc)?'disabled':''} onclick="doJudge(${p.loc},${c.id})">${c.weak?'🟡 약화':'🔴 일반'} 균열 소멸 판정</button>`;
