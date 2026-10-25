@@ -21,7 +21,7 @@ const CH=[
  {k:'killer',name:'킬러',en:'Killer',sh:'킬',pos:'해결사',diff:1.0,san:8,act:4,area:5,
   t:'전장 파악 — 균열이 있는 지역으로 이동할 때 필요한 ACT가 1 감소합니다 (최소 0).',
   a:'즉시 제거 — 다음 균열 소멸의 ACT 소모가 1 늘어나는 대신(최소 2) 해당 균열이 판정 없이 즉시 소멸됩니다.',
-  p:'임무 완수 — 능력으로 균열을 소멸시키면 SAN이 1 감소합니다.',
+  p:'임무 완수 — 즉시 제거로 균열을 소멸시키면 SAN이 1 감소합니다.',
   x:'충동 — 균열이 있는 지역으로 자동 이동하고 즉시 제거를 사용합니다.'},
  {k:'investor',name:'투자자',en:'Investor',sh:'투',pos:'공급가',diff:1.0,san:8,act:3,area:3,
   t:'공격적인 투자 — 물자 보급을 받은 추적자가 다음 판정에서 대성공하면 본인의 다음 턴 ACT가 1 증가합니다.',
@@ -296,7 +296,7 @@ function rollAnim(){
 }
 function sideHtml(){
  const cp=cur();
- return `<div class='card side'><b>추적자 현황</b>`+G.players.map(q=>`<div class='pr${q===cp?' on':''}'><div class='bar'><span class='nm'>${q===cp?'▶ ':''}${q.name}</span><span>${q.abnormal?'⚠ 이상':''}<button class='ib' onclick='showInfo(${q.id})'>ⓘ 능력</button></span></div><div class='bar'><span class='muted'>${AREAS[q.loc-1].name}</span><span>SAN ${sanH(q)}/${q.max} · ACT ${q.act}/${q.act0}</span></div><div class='gauge sg'><i style='width:${Math.max(0,q.san)/q.max*100}%'></i></div></div>`).join('')+`</div>`;
+ return `<div class='card side'><b>추적자 현황</b>`+G.players.map(q=>`<div class='pr${q===cp?' on':''}'><div class='bar'><span class='nm'>${q===cp?'▶ ':''}${q.name}</span><span>${q.abnormal?'⚠ 이상':''}<button class='ib' onclick='showInfo(${q.id})'>ⓘ 추적자 정보</button></span></div><div class='bar'><span class='muted'>${AREAS[q.loc-1].name}</span><span>SAN ${sanH(q)}/${q.max} · ACT ${q.act}/${q.act0}</span></div><div class='gauge sg'><i style='width:${Math.max(0,q.san)/q.max*100}%'></i></div></div>`).join('')+`</div>`;
 }
 function overHtml(){
  const win=G.over==='win';
