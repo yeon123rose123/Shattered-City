@@ -321,19 +321,33 @@ function showRules(){document.getElementById('modal').innerHTML=`<div class='ove
 <h4>판정</h4><ul><li>일반 균열: 1~3 실패(약화 균열로 변하고 SAN -1), 4~5 성공(소멸), 6 대성공(소멸, SAN +1).</li><li>약화된 균열: 1~2 실패(유지), 3~6 성공(소멸).</li><li>AREA 보너스: 자신의 AREA 지역에서 실패하면 한 번 더 굴려 높은 수를 적용합니다. '거울 속의 남자' 카드가 있으면 낮은 수를 적용합니다.</li><li>협력 보너스: 같은 지역의 다른 추적자 1명당 주사위 값 +1.</li></ul>
 <h4>③ 붕괴 단계</h4><ul><li>균열 전체 개수에 따라 붕괴도가 변합니다. 0개 -2 / 1개 -1 / 2개 변화 없음 / 3개 +1 / 4개 이상 +2.</li><li>일반 균열이 있는 지역의 다음 번호 지역에 일반 균열이 1개 확산됩니다(지역당 1개까지). 약화된 균열이 있는 지역은 확산하지 않으며, 확산 대상에 약화된 균열이 있으면 일반 균열로 회복됩니다.</li><li>라운드 종료 시 SAN이 0 이하면 다음 라운드부터 이상 상태가 되어 고유한 이상 행동만 합니다. SAN이 1 이상으로 회복되면 벗어납니다.</li></ul>
 <div style='text-align:center;margin-top:12px'><button class='pri' onclick='hideRules()'>닫기</button></div></div></div>`}
-function selPick(k){SEL.picks.push(k);if(SEL.picks.length>=SEL.count){const pk=SEL.picks;SEL=null;startGame(pk)}render()}
+const UPDATES=[
+ {t:'추적자 선택 확인',l:['추적자를 모두 고르면 게임 시작 여부를 묻는 확인 팝업이 나옵니다.','선택 화면 상단에 고른 추적자 이름이 표시됩니다.']},
+ {t:'팝업·표시 개선',l:['사건 단계의 균열 개수를 합산해 표시합니다.','팝업 내용을 가운데 정렬하고 너비를 조정했습니다.','추적자 이름 앞 번호를 없애고 "N라운드" 표기로 통일했습니다.','메인 화면에 업데이트 내역을 추가했습니다.']},
+ {t:'위기 카드 3차 묶음 (5장)',l:['거울 속의 남자, 저항하는 균열, 잘못된 군중, 불신의 공기, 환각의 잔영이 추가되었습니다.','잘못된 군중은 같은 지역에 다른 추적자가 있을 때만 협력 보너스 +1이 적용됩니다.']},
+ {t:'위기 카드 2차 묶음 (8장)',l:['메아리치는 상처, 불안한 군중, 시간이 다 됐다, 도시가 숨을 쉰다, 기억하는 방, 불시착, 강제 교환, 뒤바뀐 균열이 추가되었습니다.']},
+ {t:'위기 카드 1차 묶음 (7장)',l:['뒤틀린 도로, 단절된 공기, 불안한 밤, 혼자서는 안 된다, 느린 시간, 끊어진 길, 삼켜진 지역이 추가되었습니다.']},
+ {t:'규칙·밸런스 조정',l:['인원별 개수 돌림판을 조정했습니다 (2인 1~2 1번 / 3~4인 1~2 2번 / 5~6인 1~3 2번).','판정 최종 결과는 1~6 범위로 고정됩니다.','이상 상태 추적자의 SAN은 0 아래로 내려갈 수 있습니다.','SAN이 최대치의 절반 이하이면 숫자가 빨간색으로 표시됩니다.','킬러의 이상 행동 충동을 수정했습니다.']},
+ {t:'기본 기능',l:['추적자 6명(외과의사, 영화배우, 킬러, 투자자, 파일럿, 작가), 육각형 지도, 판정·붕괴 단계 팝업, 턴 알림, 규칙 요약, 능력 확인, 게임 초기화가 제공됩니다.']}
+];
+function updHtml(){return `<div class="card"><b>업데이트 내역</b><div class="upd">${UPDATES.map(u=>`<h5>${u.t}</h5>${u.l.map(t=>`<div>· ${t}</div>`).join('')}`).join('')}</div></div>`}
+function selPick(k){if(SEL.picks.length>=SEL.count)return;SEL.picks.push(k);render()}
+function confirmSel(){const pk=SEL.picks;SEL=null;startGame(pk);render()}
+function confirmHtml(){
+ return `<div class="over"><div class="card"><h3>게임 시작</h3><p class="muted">선택한 추적자로 게임을 진행할까요?</p><div class="pl">${SEL.picks.map((k,i)=>`<div>추적자 ${i+1}: <b>${CH.find(c=>c.k===k).name}</b></div>`).join('')}</div><div class="row" style="justify-content:center;margin-top:10px"><button class="pri" onclick="confirmSel()">확인</button><button onclick="SEL.picks=[];render()">다시 선택</button></div></div></div>`;
+}
 function renderSel(){
  const n=SEL.picks.length;
- return `<div class="card"><div class="bar"><b>추적자 ${n+1} / ${SEL.count} 선택</b><button onclick="SEL=null;render()">처음으로</button></div>${SEL.picks.length?`<div class="muted" style="margin-top:6px">${SEL.picks.map((k,i)=>`추적자 ${i+1}: ${CH.find(c=>c.k===k).name}`).join(' · ')}</div>`:''}</div>`+
+ return `<div class="card"><div class="bar"><b>${n>=SEL.count?'선택 완료':`추적자 ${n+1} / ${SEL.count} 선택`}</b><button onclick="SEL=null;render()">처음으로</button></div>${SEL.picks.length?`<div class="muted" style="margin-top:6px">${SEL.picks.map((k,i)=>`추적자 ${i+1}: ${CH.find(c=>c.k===k).name}`).join(' · ')}</div>`:''}</div>`+
  CH.map(c=>`<div class="card"><div class="bar"><b>${c.name} <span class="muted">${c.en}</span></b><button class="pri" ${SEL.picks.includes(c.k)?'disabled':''} onclick="selPick('${c.k}')">선택</button></div>
  <div class="muted">${c.pos} · 운용 난이도 ${c.diff} · SAN ${c.san} / ACT ${c.act} / AREA ${AREAS[c.area-1].name}</div>
- <details><summary>추적자 정보</summary><p><b>특성</b> ${c.t}</p><p><b>능력</b> ${c.a}</p><p><b>페널티</b> ${c.p}</p><p><b>이상 행동</b> ${c.x}</p></details></div>`).join('');
+ <details><summary>추적자 정보</summary><p><b>특성</b> ${c.t}</p><p><b>능력</b> ${c.a}</p><p><b>페널티</b> ${c.p}</p><p><b>이상 행동</b> ${c.x}</p></details></div>`).join('')+(n>=SEL.count?confirmHtml():'');
 }
 function render(){
  const app=document.getElementById('app');
  const rbtn=document.getElementById('rb');if(rbtn)rbtn.style.display=G?'':'none';
  if(!G){
-  app.innerHTML=SEL?renderSel():`<div class="card"><p class='muted' style='text-align:center'>추적자 인원을 선택하세요</p><div class='row' style='justify-content:center'>${[2,3,4,5,6].map(n=>`<button onclick="SEL={count:${n},picks:[]};render()">${n}인</button>`).join('')}</div></div>`;
+  app.innerHTML=SEL?renderSel():`<div class="card"><p class='muted' style='text-align:center'>추적자 인원을 선택하세요</p><div class='row' style='justify-content:center'>${[2,3,4,5,6].map(n=>`<button onclick="SEL={count:${n},picks:[]};render()">${n}인</button>`).join('')}</div></div>${updHtml()}`;
   return;
  }
  const p=cur(),pct=Math.min(100,G.collapse/30*100),here=A(p.loc);
