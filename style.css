@@ -29,7 +29,7 @@ button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
 .over .card{max-height:90vh;overflow:auto}.over .card.wide{max-width:600px}.over h4{margin:10px 0 0;text-align:left}.over .card.rules{text-align:left}.rules{font-size:14px}.rules h4{margin:12px 0 4px}.rules ul{margin:0;padding-left:0;list-style:none}.rules li{margin:2px 0}
 .hw.here .hx{background:#ffd34d}.hw.here .hx i{inset:4px}.hw.adj .hx{background:#4fd18b}
 .dice{font-size:64px;line-height:1.1}.dice.roll{animation:sh .25s infinite}@keyframes sh{0%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}100%{transform:rotate(-14deg)}}
-.pl{text-align:left;font-size:14px;margin:8px 0}.pl div{padding:3px 0;border-bottom:1px solid var(--line)}
+.pl{text-align:center;font-size:14px;margin:8px 0}.pl div{padding:3px 0;border-bottom:1px solid var(--line)}
 .tok{display:inline-block;background:#fff;color:#000;border-radius:8px;padding:0 5px;font-size:12px;margin:1px;white-space:nowrap}
 .tok.cur{background:var(--warn)}.tok.ab{opacity:.5;text-decoration:line-through}
 .log{font-size:13px;color:var(--mute);max-height:150px;overflow:auto}
