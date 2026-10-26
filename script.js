@@ -412,7 +412,7 @@ function rollAnim(){
 }
 function sideHtml(){
  const cp=cur();
- return `<div class='card side'><b>추적자 현황</b>`+G.players.map(q=>`<div class='pr${q===cp?' on':''}'><div class='bar'><span class='nm'>${q===cp?'▶ ':''}${q.name}</span><span>${q.abnormal?'⚠ 이상':''}<button class='ib' onclick='showInfo(${q.id})'>ⓘ 능력</button></span></div><div class='bar'><span class='muted'>${SIDE(q.loc)}</span><span>SAN ${sanH(q)}/${q.max} · ACT ${q.act}/${q.act0}</span></div><div class='gauge sg'><i style='width:${Math.max(0,q.san)/q.max*100}%'></i></div></div>`).join('')+`</div>`;
+ return `<div class='card side'><b>추적자 현황</b>`+G.players.map(q=>`<div class='pr${q===cp?' on':''}'><div class='bar'><span class='nm'>${q===cp?'▶ ':''}${q.name}</span><span>${q.abnormal?'⚠ 이상':''}<button class='ib' onclick='showInfo(${q.id})'>ⓘ 추적자 정보</button></span></div><div class='bar'><span class='muted'>${SIDE(q.loc)}</span><span>SAN ${sanH(q)}/${q.max} · ACT ${q.act}/${q.act0}</span></div><div class='gauge sg'><i style='width:${Math.max(0,q.san)/q.max*100}%'></i></div></div>`).join('')+`</div>`;
 }
 function overHtml(){
  const win=G.over==='win';
