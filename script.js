@@ -44,6 +44,15 @@ const CH=[
   p:'그림자 — 판정 시 협력 보너스를 적용할 수 없으며, 탐정 본인은 협력 보너스의 대상이 되지 않습니다.',
   x:'전장의 환영 — 균열이 있는 지역으로 ACT 소모 없이 즉시 이동한 후 \'탐정의 직감\' 판정을 수행합니다. 균열이 있는 지역이 여러 개면 하나를 무작위로 추첨해 이동합니다.'}
 ];
+const IMGS = {
+  surgeon:  'images/surgeon.png',
+  actress:  'images/actress.png',
+  killer:   'images/killer.png',
+  investor: 'images/investor.png',
+  pilot:    'images/pilot.png',
+  writer:   'images/writer.png',
+  detective:'images/detective.png'
+};
 const SIDE=n=>AREAS[((G&&G.map)?G.map[n-1]:n)-1].name;
 const EMO=n=>AREAS[((G&&G.map)?G.map[n-1]:n)-1].e;
 const idOf=n=>(G&&G.map)?G.map[n-1]:n;
@@ -450,7 +459,16 @@ function confirmHtml(){
 function renderSel(){
  const n=SEL.picks.length;
  return `<div class="card"><div class="bar"><b>${n>=SEL.count?'선택 완료':`추적자 ${n+1} / ${SEL.count} 선택`}</b><button onclick="SEL=null;render()">처음으로</button></div>${SEL.picks.length?`<div class="muted" style="margin-top:6px">${SEL.picks.map((k,i)=>`추적자 ${i+1}: ${CH.find(c=>c.k===k).name}`).join(' · ')}</div>`:''}</div>`+
- `<div class="sgrid">`+CH.map(c=>`<div class="card"><div class="ph"><img src="${IMGS[c.k]||`images/${c.k}.png`}" alt="${c.name}" onload="this.parentNode.classList.add('has')" onerror="this.remove()"></div><div class="nm2">${c.name}</div>
+ `<div class="sgrid">`+CH.map(c=>`<div class="card"><div class="ph">
+  <img
+    src="${IMGS[c.k]}"
+    alt="${c.name}"
+    loading="lazy"
+    onerror="this.style.display='none'; this.parentNode.classList.add('no-image')"
+  >
+  <span class="img-fallback">${c.name}</span>
+</div>
+ <div class="nm2">${c.name}</div>
  <div class="sm">${c.pos}</div>
  <div class="sm">운용 난이도: ${c.diff}</div>
  <details><summary>추적자 정보</summary><p><b>기본 스탯:</b> SAN ${c.san} / ACT ${c.act} / AREA ${c.area?AREAS[c.area-1].name:'없음'}</p><p><b>특성</b> ${c.t}</p><p><b>능력</b> ${c.a}</p><p><b>페널티</b> ${c.p}</p><p><b>이상 행동</b> ${c.x}</p></details>
