@@ -36,7 +36,7 @@ const CH=[
  {k:'writer',name:'작가',en:'Writer',sh:'작',pos:'전략가',diff:3.0,san:4,act:2,area:4,
   t:'플롯 비틀기 — 라운드가 시작할 때마다 위기 카드 2장을 공개하며, 그 중 1장을 골라 효과롤 발동시킵니다.',
   a:'데우스 엑스 마키나 — 판정에 실패하면 SAN 감소를 무효화하고 다음 번호 지역으로 즉시 이동합니다.',
-  p:'관찰자 — 다른 추적자에게 지원을 하거나 다른 추적자에게서 지원을 받을 때 ACT가 1 추가 소모됩니다.',
+  p:'관찰자 — 다른 추적제에게 지원을 하거나 다른 추적자에게서 지원을 받을 때 ACT가 1 추가 소모됩니다.',
   x:'원고 파기 — 즉시 도서관으로 이동하며, 다음 턴까지 위기 카드·균열 확산 피해를 무시합니다. 대신 라운드 종료 시 붕괴도가 추가로 1 증가합니다.'},
  {k:'detective',name:'탐정',en:'Detective',sh:'탐',pos:'해결사',diff:1.5,san:9,act:3,area:null,
   t:'없음',
@@ -54,10 +54,10 @@ const rem=p=>ab(p)==='pilot'&&canAbil(p)&&!!p.armP;
 const aMod=(q,n)=>{if(G.fx.lock)return;q.mod+=n};
 const ABN={surgeon:'응급 치료',actress:'스포트라이트',killer:'즉시 제거',investor:'물자 보급',pilot:'공중 지원',writer:'데우스 엑스 마키나',detective:'탐정의 직감'};
 const CARDS=[
- {name:'뒤틀린 도로',desc:'이동에 2 ACT가 소모됩니다.',set(){G.fx.moveCost=2}},
- {name:'단절된 공기',desc:'모든 추적자는 지원 행동을 할 수 없습니다.',set(){G.fx.noSupport=true}},
- {name:'불안한 밤',desc:'휴식으로 SAN을 회복할 수 없습니다.',set(){G.fx.noRestHeal=true}},
- {name:'혼자서는 안 된다',desc:'지역에 추적자가 두 명 이상 있어야 균열 소멸 판정을 시도할 수 있습니다.',set(){G.fx.needTwo=true}},
+ {name:'뒤틀린 도로',desc:'이번 라운드에서 이동에 2 ACT가 소모된다.',set(){G.fx.moveCost=2}},
+ {name:'단절된 공기',desc:'이번 라운드에 모든 추적자는 지원 행동을 할 수 없다.',set(){G.fx.noSupport=true}},
+ {name:'불안한 밤',desc:'이번 라운드에 휴식으로 SAN을 회복할 수 없다.',set(){G.fx.noRestHeal=true}},
+ {name:'혼자서는 안 된다',desc:'이번 라운드에 지역에 추적자가 두 명 이상 있어야 균열 소멸 판정을 시도할 수 있다.',set(){G.fx.needTwo=true}},
  {name:'느린 시간',desc:'이번 라운드에 모든 추적자의 ACT가 1 감소한다.',set(){G.fx.actMinus=1;G.players.forEach(p=>{p.act=Math.max(0,p.act0-1)});log('느린 시간: 모든 추적자 ACT -1')}},
  {name:'끊어진 길',draw:true,desc:'광장을 제외한 지역 1개를 추첨한다. 이번 라운드에 해당 지역과 광장 사이의 이동이 통제된다.',set(){const n=rnd(6);G.fx.cut=n;G.fx.note=`${SIDE(n)} ↔ 광장 이동 통제`;log('끊어진 길: '+G.fx.note)}},
  {name:'삼켜진 지역',draw:true,desc:'지역 1개를 추첨한다. 이번 라운드에 해당 지역으로의 이동이 제한된다.',set(){const n=rnd(7);G.fx.sealed=n;G.fx.note=`${SIDE(n)}(으)로 이동 불가`;log('삼켜진 지역: '+G.fx.note)}},
@@ -450,7 +450,7 @@ function confirmHtml(){
 function renderSel(){
  const n=SEL.picks.length;
  return `<div class="card"><div class="bar"><b>${n>=SEL.count?'선택 완료':`추적자 ${n+1} / ${SEL.count} 선택`}</b><button onclick="SEL=null;render()">처음으로</button></div>${SEL.picks.length?`<div class="muted" style="margin-top:6px">${SEL.picks.map((k,i)=>`추적자 ${i+1}: ${CH.find(c=>c.k===k).name}`).join(' · ')}</div>`:''}</div>`+
- `<div class="sgrid">`+CH.map(c=>`<div class="card"><div class="ph"><img src="images/${c.k}.png" alt="${c.name}" onerror="this.remove()"></div><div class="nm2">${c.name}</div>
+ `<div class="sgrid">`+CH.map(c=>`<div class="card"><div class="ph"><img src="${IMGS[c.k]||`images/${c.k}.png`}" alt="${c.name}" onload="this.parentNode.classList.add('has')" onerror="this.remove()"></div><div class="nm2">${c.name}</div>
  <div class="sm">${c.pos}</div>
  <div class="sm">운용 난이도: ${c.diff}</div>
  <details><summary>추적자 정보</summary><p><b>기본 스탯:</b> SAN ${c.san} / ACT ${c.act} / AREA ${c.area?AREAS[c.area-1].name:'없음'}</p><p><b>특성</b> ${c.t}</p><p><b>능력</b> ${c.a}</p><p><b>페널티</b> ${c.p}</p><p><b>이상 행동</b> ${c.x}</p></details>
