@@ -38,6 +38,11 @@ const CH=[
   a:'데우스 엑스 마키나 — 판정에 실패하면 SAN 감소를 무효화하고 다음 번호 지역으로 즉시 이동합니다.',
   p:'관찰자 — 다른 추적자에게 지원을 하거나 다른 추적자에게서 지원을 받을 때 ACT가 1 추가 소모됩니다.',
   x:'원고 파기 — 즉시 도서관으로 이동하며, 다음 턴까지 위기 카드·균열 확산 피해를 무시합니다. 대신 라운드 종료 시 붕괴도가 추가로 1 증가합니다.'}
+ {k:'detective',name:'탐정',en:'Detective',sh:'탐',pos:'해결사',diff:1.5,san:9,act:3,area:null,
+  t:'없음',
+  a:'탐정의 직감 — 다음 균열 소멸 판정 시 주사위 2개를 굴려 합산한 결과로 판정합니다. 합산한 결과가 10 이상이면 해당 균열뿐만 아니라 탐정이 고른 지역의 균열 1개가 같이 소멸되며, 7 이상 9 이하면 해당 균열만 소멸됩니다. 6 이하면 균열이 약화되며(약화된 균열일 시 약화 상태 유지) 탐정의 SAN이 2 감소합니다).',
+  p:'그림자 — 판정 시 협력 보너스를 적용할 수 없으며, 탐정 본인은 협력 보너스의 대상이 되지 않습니다.',
+  x:'전장의 환영 — 균열이 있는 지역으로 ACT 소모 없이 즉시 이동한 후 \'탐정의 직감\' 판정을 수행합니다. 균열이 있는 지역이 여러 개면 하나를 무작위로 추첨해 이동합니다.'}
 ];
 const SIDE=n=>AREAS[((G&&G.map)?G.map[n-1]:n)-1].name;
 const EMO=n=>AREAS[((G&&G.map)?G.map[n-1]:n)-1].e;
@@ -47,12 +52,12 @@ const ab=p=>p.ab||p.k;
 const canAbil=p=>G.fx.noAbil!==p.id;
 const rem=p=>ab(p)==='pilot'&&canAbil(p)&&!!p.armP;
 const aMod=(q,n)=>{if(G.fx.lock)return;q.mod+=n};
-const ABN={surgeon:'응급 치료',actress:'스포트라이트',killer:'즉시 제거',investor:'물자 보급',pilot:'공중 지원',writer:'데우스 엑스 마키나'};
+const ABN={surgeon:'응급 치료',actress:'스포트라이트',killer:'즉시 제거',investor:'물자 보급',pilot:'공중 지원',writer:'데우스 엑스 마키나',detective:'탐정의 직감'};
 const CARDS=[
- {name:'뒤틀린 도로',desc:'이번 라운드에서 이동에 2 ACT가 소모된다.',set(){G.fx.moveCost=2}},
- {name:'단절된 공기',desc:'이번 라운드에 모든 추적자는 지원 행동을 할 수 없다.',set(){G.fx.noSupport=true}},
- {name:'불안한 밤',desc:'이번 라운드에 휴식으로 SAN을 회복할 수 없다.',set(){G.fx.noRestHeal=true}},
- {name:'혼자서는 안 된다',desc:'이번 라운드에 지역에 추적자가 두 명 이상 있어야 균열 소멸 판정을 시도할 수 있다.',set(){G.fx.needTwo=true}},
+ {name:'뒤틀린 도로',desc:'이동에 2 ACT가 소모됩니다.',set(){G.fx.moveCost=2}},
+ {name:'단절된 공기',desc:'모든 추적자는 지원 행동을 할 수 없습니다.',set(){G.fx.noSupport=true}},
+ {name:'불안한 밤',desc:'휴식으로 SAN을 회복할 수 없습니다.',set(){G.fx.noRestHeal=true}},
+ {name:'혼자서는 안 된다',desc:'지역에 추적자가 두 명 이상 있어야 균열 소멸 판정을 시도할 수 있습니다.',set(){G.fx.needTwo=true}},
  {name:'느린 시간',desc:'이번 라운드에 모든 추적자의 ACT가 1 감소한다.',set(){G.fx.actMinus=1;G.players.forEach(p=>{p.act=Math.max(0,p.act0-1)});log('느린 시간: 모든 추적자 ACT -1')}},
  {name:'끊어진 길',draw:true,desc:'광장을 제외한 지역 1개를 추첨한다. 이번 라운드에 해당 지역과 광장 사이의 이동이 통제된다.',set(){const n=rnd(6);G.fx.cut=n;G.fx.note=`${SIDE(n)} ↔ 광장 이동 통제`;log('끊어진 길: '+G.fx.note)}},
  {name:'삼켜진 지역',draw:true,desc:'지역 1개를 추첨한다. 이번 라운드에 해당 지역으로의 이동이 제한된다.',set(){const n=rnd(7);G.fx.sealed=n;G.fx.note=`${SIDE(n)}(으)로 이동 불가`;log('삼켜진 지역: '+G.fx.note)}},
@@ -93,8 +98,8 @@ const CARDS=[
   const n=G.players.length,a=rnd(n)-1;let b;do{b=rnd(n)-1}while(b===a);
   const P=G.players[a],Q=G.players[b],ap=ab(P),aq=ab(Q);P.ab=aq;Q.ab=ap;
   G.fx.note=`${P.name} ↔ ${Q.name}`;log(`정체성 분열: ${P.name}과(와) ${Q.name}의 능력 교환`);log(`${P.name}: ${ABN[aq]} 사용`);log(`${Q.name}: ${ABN[ap]} 사용`)}},
- {name:'엇갈린 신호',desc:'다른 추적자의 ACT 수치를 직접 바꾸는 모든 추적자의 특성·능력·패널티·이상 행동의 효과가 무효화됩니다.',set(){G.fx.lock=true}},
- {name:'뒤바뀐 지도',draw:true,desc:'광장을 제외한 지역 중 2개를 추첨합니다. 두 지역의 위치가 서로 바뀌며, 지역 번호는 그대로 유지된 채 지역 이름·균열·추적자가 함께 이동합니다.',set(){
+ {name:'엇갈린 신호',desc:'이번 라운드에 모든 추적자의 ACT가 고정되어 변하지 않는다. 정상적으로 ACT를 소비하지만, 다른 추적자의 ACT 수치에 직접 관여하는 모든 추적자 능력의 효과(투자자의 특성·능력·패널티·이상 행동 포함)가 무효화된다.',set(){G.fx.lock=true}},
+ {name:'뒤바뀐 지도',draw:true,desc:'광장을 제외한 지역 중 2개를 추첨한다. 이번 라운드에 두 지역의 위치가 서로 바뀌며, 지역 번호는 그대로 유지된 채 지역 이름·균열·추적자가 함께 이동한다.',set(){
   const a=rnd(6),b=[1,2,3,4,5,6].filter(x=>x!==a)[rnd(5)-1],na=SIDE(a),nb=SIDE(b);
   swapMap(a,b);G.fx.swapMap=[a,b];G.fx.note=`${na} ${a}번→${b}번, ${nb} ${b}번→${a}번`;log(`뒤바뀐 지도: ${na}(${a}번)과(와) ${nb}(${b}번)의 위치 교환`)}},
  {name:'환각의 잔영',desc:'이번 라운드에 대성공으로 균열을 소멸시켜도 대성공 보너스인 SAN +1 회복 효과가 무시된다.',set(){G.fx.noGreatHeal=true}}
@@ -157,7 +162,7 @@ const canSR=n=>!A(n).cracks.length||surgeonAt(n);
 
 function startGame(picks){
  const players=picks.map((k,i)=>{const c=CH.find(x=>x.k===k);
-  return {id:i,k,name:c.name,sh:c.sh,max:c.san,san:c.san,act0:c.act,act:c.act,area:c.area,loc:c.area,last:c.area,stay:0,abnormal:false,mod:0,used:false,arm:false,armD:false,spot:0,spotBy:null,supplied:false}});
+  return {id:i,k,name:c.name,sh:c.sh,max:c.san,san:c.san,act0:c.act,act:c.act,area:c.area,loc:c.area||7,last:c.area||7,stay:0,abnormal:false,mod:0,used:false,arm:false,armD:false,spot:0,spotBy:null,supplied:false}});
  G={players,areas:AREAS.map(()=>({cracks:[]})),collapse:15,round:0,turn:0,card:null,choice:null,pop:[],col:null,fx:{},map:[1,2,3,4,5,6,7],judged:new Set(),log:[],over:null,extra:0,
   deck:[...CARDS].sort(()=>Math.random()-.5)};
  startRound();
@@ -191,7 +196,7 @@ function pickCard(i){
 }
 function startTurn(){
  const p=cur();
- p.act=Math.max(0,p.act0+(G.fx.lock?0:p.mod)-(G.fx.actMinus||0));p.mod=0;p.used=false;p.arm=false;p.armD=false;p.armP=false;p.immune=false;G.judged=new Set();
+ p.act=Math.max(0,p.act0+(G.fx.lock?0:p.mod)-(G.fx.actMinus||0));p.mod=0;p.used=false;p.arm=false;p.armD=false;p.armP=false;p.armT=false;p.immune=false;G.judged=new Set();
  G.players.forEach(q=>{if(q.spotBy===p.id){q.spot=0;q.spotBy=null}});
  if(p.abnormal){abnormal(p);endTurn();return}
  if(p.act<=0){log(`${p.name}: ACT가 0이라 턴을 넘긴다`);endTurn()}
@@ -199,7 +204,7 @@ function startTurn(){
 function endTurn(){
  const p=cur();
  if(p.k==='actress'&&G.players.filter(q=>q.loc===p.loc).length===1){loseS(p,1);log('백스테이지: 영화배우 SAN -1')}
- p.arm=false;p.armD=false;p.armP=false;G.turn++;
+ p.arm=false;p.armD=false;p.armP=false;p.armT=false;G.turn++;
  if(G.turn>=G.players.length)collapsePhase();else startTurn();
 }
 function collapsePhase(){
@@ -275,6 +280,11 @@ function abnormal(p){
   const cr=A(p.loc).cracks[0];
   if(cr)judgeCore(p,p.loc,cr.id,0,true);else{loseS(p,1);log('균열이 없어 SAN -1')}}
  else if(p.k==='writer'){p.loc=slotOf(4);p.immune=true;G.extra++;log(`${pre}원고 파기: 도서관으로 이동, 라운드 종료 시 붕괴도 +1`)}
+ else if(p.k==='detective'){
+  const c=[];G.areas.forEach((a,i)=>{if(a.cracks.length)c.push(i+1)});
+  if(!c.length){log(`${pre}전장의 환영: 균열이 없어 아무 일도 없다`);return}
+  const n=c[rnd(c.length)-1];p.loc=n;log(`${pre}전장의 환영: ${SIDE(n)} 이동 후 탐정의 직감 판정`);
+  p.armT=true;judgeCore(p,n,A(n).cracks[0].id,0,true);p.armT=false}
 }
 
 function judgeCore(p,no,id,cost,free){
@@ -282,8 +292,8 @@ function judgeCore(p,no,id,cost,free){
  if(!c||G.judged.has(id)||(!free&&p.act<cost))return false;
  if(!canJudge(no)){if(free)log('혼자서는 안 된다: 지역에 추적자가 2명 미만이라 판정을 시도하지 못했다');return false}
  if(!free)p.act-=cost;G.judged.add(id);
- const f=G.fx,cnt=no===p.loc?G.players.filter(q=>q!==p&&q.loc===p.loc).length:0;
- const coop=f.mirror?0:f.crowd?(cnt>0?1:0):(f.distrust===no?-cnt:cnt);
+ const f=G.fx,cnt=no===p.loc?G.players.filter(q=>q!==p&&q.loc===p.loc&&q.k!=='detective').length:0;
+ const coop=p.k==='detective'||f.mirror?0:f.crowd?(cnt>0?1:0):(f.distrust===no?-cnt:cnt);
  const pen=p.k==='pilot'&&p.stay>=2&&p.loc===p.last?1:0;
  const bonus=coop+p.spot-pen,wasWeak=c.weak,mirror=!!f.mirror,notes=[];
  const fails=r=>c.weak?(mirror?r>=5:r<=2):(mirror?r>=4:r<=3);
@@ -291,11 +301,21 @@ function judgeCore(p,no,id,cost,free){
  if(mirror)notes.push('거울 속의 남자: 판정 범위 반전, 협력 보너스 미적용');
  if(f.crowd)notes.push('잘못된 군중: 같은 지역에 다른 추적자가 있으면 협력 보너스 +1 고정');
  if(f.distrust===no)notes.push('불신의 공기: 같은 지역 추적자 1명당 판정 -1');
- const raw=roll(),spotV=p.spot;let rr=null,mir=false;let r=Math.max(1,Math.min(6,raw+bonus)),txt=`🎲 ${raw}${bonus?(bonus>0?' +':' ')+bonus:''}`;
- if(fails(r)&&p.area===idOf(p.loc)){const rr0=roll(),r2=Math.max(1,Math.min(6,rr0+bonus));rr=rr0;mir=mirror;r=mir?Math.min(r,r2):Math.max(r,r2);txt+=` / AREA 재굴림 ${r2}`}
- const fail=fails(r),great=!c.weak&&(mirror?r<=1:r>=6);let res;
+ const det=!!p.armT;if(det)p.armT=false;
+ const spotV=p.spot;let rr=null,mir=false,raw,r,txt,fail,great,dice=null;
+ if(det){
+  const d1=roll(),d2=roll(),sum=d1+d2+bonus,eff=mirror?14-sum:sum;
+  dice=[d1,d2];raw=d1;r=sum;txt=`🎲 ${d1}+${d2}${bonus?(bonus>0?' +':' ')+bonus:''}`;
+  fail=eff<=6;great=eff>=10;
+  notes.push('탐정의 직감: 주사위 2개 합계로 판정 (10 이상 대성공 / 7~9 성공 / 6 이하 실패)');
+ }else{
+  raw=roll();r=Math.max(1,Math.min(6,raw+bonus));txt=`🎲 ${raw}${bonus?(bonus>0?' +':' ')+bonus:''}`;
+  if(fails(r)&&p.area===idOf(p.loc)){const rr0=roll(),r2=Math.max(1,Math.min(6,rr0+bonus));rr=rr0;mir=mirror;r=mir?Math.min(r,r2):Math.max(r,r2);txt+=` / AREA 재굴림 ${r2}`}
+  fail=fails(r);great=!c.weak&&(mirror?r<=1:r>=6);
+ }
+ let res;
  if(fail){
-  let loss=c.weak?0:1;
+  let loss=det?2:(c.weak?0:1);
   res=c.weak?'실패: 약화된 균열 유지':'실패: 균열 약화';c.weak=true;
   const deus=p.arm;if(deus){p.arm=false;loss=0}
   if(f.contagion){loss+=1;notes.push('전염되는 광기: SAN 감소량 +1')}
@@ -306,16 +326,31 @@ function judgeCore(p,no,id,cost,free){
   if(deus){p.loc=nextNo(p.loc);res+=`, 데우스 엑스 마키나로 SAN 감소 무효 → ${SIDE(p.loc)} 이동`}
  }else{
   a.cracks=a.cracks.filter(x=>x!==c);
-  if(great){if(f.noGreatHeal)res='대성공: 균열 소멸 (환각의 잔영: SAN 회복 무시)';else{heal(p,1);res='대성공: 균열 소멸, SAN +1'}}else res='성공: 균열 소멸';
+  if(great){if(f.noGreatHeal)res='대성공: 균열 소멸 (환각의 잔영: SAN 회복 무시)';else if(wasWeak)res='대성공: 균열 소멸';else{heal(p,1);res='대성공: 균열 소멸, SAN +1'}}else res='성공: 균열 소멸';
+  if(det&&great){
+   const seen=new Set(),opts=[];
+   G.areas.forEach((ar,i)=>ar.cracks.forEach(x=>{const k=(i+1)+':'+x.weak;if(!seen.has(k)){seen.add(k);opts.push({no:i+1,id:x.id,weak:x.weak})}}));
+   if(!opts.length)notes.push('탐정의 직감 대성공: 함께 소멸시킬 균열이 없음');
+   else if(free){const o=opts[rnd(opts.length)-1];removeCrackById(o.no,o.id);const t=`탐정의 직감 대성공: ${SIDE(o.no)}의 ${o.weak?'약화된':'일반'} 균열도 함께 소멸`;notes.push(t);res+=' · '+t}
+   else{G.det={who:p.id,opts};notes.push('탐정의 직감 대성공: 함께 소멸시킬 균열을 선택')}
+  }
   if(f.seal){const d=rnd(6),n2=nextNo(no);let t=`불완전한 봉인: 추가 주사위 ${d}`;if(d<=2){addCrack(n2);t+=` → ${SIDE(n2)}에 균열 발생`}else t+=' → 변화 없음';notes.push(t);res+=' · '+t}
  }
  if(p.spot&&p.k!=='actress'&&!fail)G.players.filter(q=>q.k==='actress').forEach(q=>heal(q,great?2:1));
  p.spot=0;p.spotBy=null;
  if(p.supplied){const inv=G.players.find(q=>q.k==='investor');if(inv&&!f.lock){if(great)inv.mod+=1;if(fail)inv.mod-=1}p.supplied=false}
- log(`${p.name} 판정 ${txt} = ${r} · ${res}`);pop({k:'dice',who:p.name,where:SIDE(no),wasWeak,raw,rr,mir,coop,spot:spotV,pen,r,res,notes,cap:raw+bonus>6||(rr!==null&&rr+bonus>6),low:raw+bonus<1||(rr!==null&&rr+bonus<1)});return true;
+ log(`${p.name} 판정 ${txt} = ${r} · ${res}`);pop({k:'dice',who:p.name,where:SIDE(no),wasWeak,raw,rr,mir,coop,spot:spotV,pen,r,res,notes,dice,cap:!det&&(raw+bonus>6||(rr!==null&&rr+bonus>6)),low:!det&&(raw+bonus<1||(rr!==null&&rr+bonus<1))});return true;
 }
 const remoteCost=(p,n)=>adjOf(p.loc).includes(n)?1:2;
-function doJudge(no,id){const p=cur(),remote=no!==p.loc;if(remote&&!rem(p))return;if(judgeCore(p,no,id,remote?remoteCost(p,no):1,false)){if(remote)p.armP=false;after()}}
+function doJudge(no,id){const p=cur(),remote=no!==p.loc;if(remote&&!rem(p))return;if(judgeCore(p,no,id,remote?remoteCost(p,no):1,false)){if(remote)p.armP=false;if(G.det){render();return}after()}}
+function removeCrackById(no,id){A(no).cracks=A(no).cracks.filter(x=>x.id!==id)}
+function pickDet(i){
+ const o=G.det.opts[i];G.det=null;removeCrackById(o.no,o.id);
+ const t=`${SIDE(o.no)}의 ${o.weak?'약화된':'일반'} 균열도 함께 소멸`;log('탐정의 직감: '+t);pop({k:'msg',title:'탐정의 직감 · 대성공',lines:[t]});after();
+}
+function detHtml(){
+ return `<div class="over"><div class="card"><h3>탐정의 직감 · 대성공</h3><p class="muted">해당 균열과 함께 소멸시킬 균열을 선택하세요.</p><div class="row" style="justify-content:center">${G.det.opts.map((o,i)=>`<button onclick="pickDet(${i})">${EMO(o.no)} ${SIDE(o.no)} · ${o.weak?'🟡 약화':'🔴 일반'}</button>`).join('')}</div></div></div>`;
+}
 function doInstant(id){
  const p=cur(),a=A(p.loc);
  if(!p.armD||p.act<2||!a.cracks.some(c=>c.id===id))return;
@@ -343,6 +378,7 @@ function doAbility(i){
  else if(a==='investor'){if(G.fx.lock)return;G.players.forEach(q=>{if(q.loc===p.loc||adjOf(p.loc).includes(q.loc)){q.supplied=true;if(q===p)p.act++;else q.mod++}});log('물자 보급: 주변 추적자 ACT +1')}
  else if(a==='writer'){p.arm=true;log('데우스 엑스 마키나 준비')}
  else if(a==='pilot'){p.armP=true;log('공중 지원 준비 (다른 지역 판정 또는 지원 1회)')}
+ else if(a==='detective'){p.armT=true;log('탐정의 직감 준비 (다음 균열 소멸 판정: 주사위 2개 합산)')}
  else return;
  p.used=true;render();
 }
@@ -351,10 +387,11 @@ const FACES=['⚀','⚁','⚂','⚃','⚄','⚅'];
 function popNext(){G.pop.shift();render()}
 function popHtml(o){
  if(o.k==='dice'){
-  const det=`<div class="pl"><div>${o.who} · ${o.where} · ${o.wasWeak?'약화된 균열':'일반 균열'}</div><div>주사위 ${o.raw}${o.coop?` ${o.coop>0?'+':'−'} 협력 ${Math.abs(o.coop)}`:''}${o.spot?` + 스포트라이트 ${o.spot}`:''}${o.pen?` − 역마살 ${o.pen}`:''}</div>${o.rr!==null?`<div>AREA 보너스 재굴림: ${o.rr} → ${o.mir?'낮은':'높은'} 수 적용</div>`:''}${(o.notes||[]).map(t=>`<div class="muted">${t}</div>`).join('')}<div><b>최종 ${o.r}</b>${o.cap&&o.r===6?' (최대 6으로 조정)':''}${o.low&&o.r===1?' (최소 1로 조정)':''} · ${o.res}</div></div>`;
-  return `<div class="over"><div class="card"><div class="dice ${o.done?'':'roll'}" id="dice">${o.done?FACES[o.r-1]:'🎲'}</div><div id="dres" style="${o.done?'':'visibility:hidden'}">${det}</div><button class="pri" id="pok" ${o.done?'':'disabled'} onclick="popNext()">확인</button></div></div>`;
+  const det=`<div class="pl"><div>${o.who} · ${o.where} · ${o.wasWeak?'약화된 균열':'일반 균열'}</div><div>주사위 ${o.dice?`${o.dice[0]} + ${o.dice[1]}`:o.raw}${o.coop?` ${o.coop>0?'+':'−'} 협력 ${Math.abs(o.coop)}`:''}${o.spot?` + 스포트라이트 ${o.spot}`:''}${o.pen?` − 역마살 ${o.pen}`:''}</div>${o.rr!==null?`<div>AREA 보너스 재굴림: ${o.rr} → ${o.mir?'낮은':'높은'} 수 적용</div>`:''}${(o.notes||[]).map(t=>`<div class="muted">${t}</div>`).join('')}<div><b>${o.dice?'합계':'최종'} ${o.r}</b>${o.cap&&o.r===6?' (최대 6으로 조정)':''}${o.low&&o.r===1?' (최소 1로 조정)':''} · ${o.res}</div></div>`;
+  return `<div class="over"><div class="card"><div class="dice ${o.done?'':'roll'}" id="dice">${o.done?(o.dice?o.dice.map(d=>FACES[d-1]).join(' '):FACES[o.r-1]):'🎲'}</div><div id="dres" style="${o.done?'':'visibility:hidden'}">${det}</div><button class="pri" id="pok" ${o.done?'':'disabled'} onclick="popNext()">확인</button></div></div>`;
  }
  const L=a=>a.map(t=>`<div>${t}</div>`).join('');
+ if(o.k==='msg')return `<div class="over"><div class="card"><h3>${o.title}</h3><div class="pl">${L(o.lines)}</div><button class="pri" onclick="popNext()">확인</button></div></div>`;
  if(o.k==='ev')return `<div class="over"><div class="card ctr"><h3>${o.title}</h3><p class="muted">균열 발생</p>${o.note?`<p class="muted">${o.note}</p>`:''}<div class="pl">${L(o.spin)}</div><div class="pl">${o.areas.length||o.rest.length||o.lost?L(o.areas)+L(o.rest)+(o.lost?`<div>분산 불가로 소멸: ${o.lost}개 (붕괴도 +${o.lost*.5})</div>`:''):'<div>발생한 균열 없음</div>'}</div><button class="pri" onclick="popNext()">확인</button></div></div>`;
  if(o.k==='card')return `<div class="over"><div class="card ctr"><h3>${o.title}</h3><p class="muted">위기 카드</p><p style="font-size:20px;margin:6px 0">🃏 <b>${o.card.name}</b></p><p>${o.card.desc}</p>${o.lines.length?`<div class="pl"><div class="muted">결과</div>${L(o.lines)}</div>`:''}<button class="pri" onclick="popNext()">확인</button></div></div>`;
  return `<div class="over"><div class="card"><h3>${o.title}</h3><div class="gauge"><i style="width:${Math.min(100,o.gauge/30*100)}%"></i></div><p class="muted">도시 붕괴도 ${o.gauge} / 30</p>${o.secs.map(([h,ls])=>`<div class="sec"><b>${h}</b>${L(ls)}</div>`).join('')}<button class="pri" onclick="popNext()">확인</button></div></div>`;
@@ -362,7 +399,7 @@ function popHtml(o){
 function rollAnim(){
  const o=G.pop[0];if(!o||o.k!=='dice'||o.done)return;
  const d=document.getElementById('dice');let n=0;
- const iv=setInterval(()=>{d.textContent=FACES[rnd(6)-1];if(++n>=9){clearInterval(iv);o.done=true;d.textContent=FACES[o.r-1];d.classList.remove('roll');document.getElementById('dres').style.visibility='visible';document.getElementById('pok').disabled=false}},110);
+ const iv=setInterval(()=>{d.textContent=o.dice?FACES[rnd(6)-1]+' '+FACES[rnd(6)-1]:FACES[rnd(6)-1];if(++n>=9){clearInterval(iv);o.done=true;d.textContent=o.dice?o.dice.map(x=>FACES[x-1]).join(' '):FACES[o.r-1];d.classList.remove('roll');document.getElementById('dres').style.visibility='visible';document.getElementById('pok').disabled=false}},110);
 }
 function sideHtml(){
  const cp=cur();
@@ -374,11 +411,11 @@ function overHtml(){
  const tr=G.players.map(p=>`<div><b>${p.name}</b> · SAN ${sanH(p)}/${p.max} · ${p.abnormal?'이상 상태':'정상'} · ${SIDE(p.loc)}</div>`).join('');
  const cr=AREAS.map(a=>{const c=A(a.n).cracks,w=c.filter(x=>x.weak).length;return `<div>${a.name}: ${c.length?`일반 ${c.length-w}개 / 약화 ${w}개`:'균열 없음'}</div>`}).join('');
  const tot=G.areas.reduce((s,a)=>s+a.cracks.length,0);
- return `<div class='over'><div class='card'><h2>게임 종료 · <span style='color:#e5484d'>${win?'승리':'패배'}</span></h2><p>${win?'도시를 구했다':'도시가 무너졌다'}</p><p class='muted'>${why}</p><div class='pl'><div>진행한 라운드: <b>${G.round}라운드</b> · 도시 붕괴도 <b>${G.collapse}</b> / 30</div></div><h4>추적자 현황</h4><div class='pl'>${tr}</div><button class='pri' onclick='G=null;render()'>다시 시작</button></div></div>`;
+ return `<div class='over'><div class='card'><h2>게임 종료 · <span style='color:#e5484d'>${win?'승리':'패배'}</span></h2><p>${win?'도시를 구했다':'도시가 무너졌다'}</p><p class='muted'>${why}</p><div class='pl'><div>진행한 라운드: <b>${G.round}라운드</b> · 도시 붕괴도 <b>${G.collapse}</b> / 30</div></div><h4 style='text-align:center'>추적자 현황</h4><div class='pl'>${tr}</div><button class='pri' onclick='G=null;render()'>다시 시작</button></div></div>`;
 }
 function showInfo(i){
  const q=G.players[i],c=CH.find(x=>x.k===q.k);
- document.getElementById('modal').innerHTML=`<div class='over'><div class='card wide rules'><h3 style='text-align:center;margin:0'>${c.name} <span class='muted'>${c.en}</span></h3><div class='muted' style='text-align:center'>${c.pos} · 운용 난이도 ${c.diff} · SAN ${c.san} / ACT ${c.act} / AREA ${AREAS[c.area-1].name}</div><h4>특성</h4><p style='margin:0'>${c.t}</p><h4>능력</h4><p style='margin:0'>${c.a}</p><h4>페널티</h4><p style='margin:0'>${c.p}</p><h4>이상 행동</h4><p style='margin:0'>${c.x}</p><div style='text-align:center;margin-top:12px'><button class='pri' onclick='hideRules()'>닫기</button></div></div></div>`;
+ document.getElementById('modal').innerHTML=`<div class='over'><div class='card wide rules'><h3 style='text-align:center;margin:0'>${c.name} <span class='muted'>${c.en}</span></h3><div class='muted' style='text-align:center'>${c.pos} · 운용 난이도 ${c.diff} · SAN ${c.san} / ACT ${c.act} / AREA ${c.area?AREAS[c.area-1].name:'없음'}</div><h4>특성</h4><p style='margin:0'>${c.t}</p><h4>능력</h4><p style='margin:0'>${c.a}</p><h4>페널티</h4><p style='margin:0'>${c.p}</p><h4>이상 행동</h4><p style='margin:0'>${c.x}</p><div style='text-align:center;margin-top:12px'><button class='pri' onclick='hideRules()'>닫기</button></div></div></div>`;
 }
 function askReset(){document.getElementById('modal').innerHTML=`<div class='over'><div class='card' style='max-width:420px'><h3>게임 초기화</h3><p class='muted'>현재 게임은 포기 처리되고 추적자 인원 선택 화면으로 돌아갑니다. 진행할까요?</p><div class='row' style='justify-content:center'><button class='pri' onclick='doReset()'>초기화</button><button onclick='hideRules()'>취소</button></div></div></div>`}
 function doReset(){hideRules();G=null;SEL=null;render()}
@@ -393,16 +430,16 @@ function showRules(){document.getElementById('modal').innerHTML=`<div class='ove
 <div style='text-align:center;margin-top:12px'><button class='pri' onclick='hideRules()'>닫기</button></div></div></div>`}
 function cancelAbility(){
  const p=cur();
- if(!p.arm&&!p.armD&&!p.armP)return;
- p.arm=false;p.armD=false;p.armP=false;p.used=false;log(`${p.name}: 능력 사용 취소`);render();
+ if(!p.arm&&!p.armD&&!p.armP&&!p.armT)return;
+ p.arm=false;p.armD=false;p.armP=false;p.armT=false;p.used=false;log(`${p.name}: 능력 사용 취소`);render();
 }
 function footHtml(){return `<div class="foot">게임에 대한 건의사항이나 발견한 문제는 아래 링크에 남겨 주세요.<br><a href="https://forms.gle/ckWihTmCcQaR1gpcA" target="_blank" rel="noopener noreferrer">https://forms.gle/ckWihTmCcQaR1gpcA</a></div>`}
 const UPDATES=[
  {t:'기능 추가',l:['메인 화면 최하단에 건의사항을 제출할 수 있는 링크를 추가했습니다.','능력을 활성화하고 대기 상태일 때 능력 사용을 취소할 수 있도록 버튼을 추가했습니다.','게임에 참여할 추적자를 모두 선택한 뒤 게임 시작 여부를 묻는 확인 팝업을 추가했습니다.','추적자 선택 화면 상단에 선택한 추적자 이름이 표시되도록 추가했습니다.']},
- {t:'표시 개선',l:['위기 카드 \'불안한 밤\'의 효과가 적용되고 있을 때는 \'휴식\' 버튼이 비활성화 되도록 수정했습니다.','\'외과의사\'의 능력 \'응급치료\'가 SAN이 최대치인 추적자가 대상일 때는 능력 버튼이 비활성화 되도록 수정했습니다.','균열 소멸 판정 시 주사위 아이콘이 보너스까지 반영된 최종 결과로 나오도록 수정했습니다.','사건 단계의 균열 발생 팝업에서 균열 개수를 합산해 표시하도록 수정했습니다.','추적자의 SAN이 0 미만으로 감소하면 음수로 표기되도록 수정했습니다.','추적자의 SAN이 최대치의 절반 이하이면 숫자가 빨간색으로 표시되도록 수정했습니다.']},
- {t:'신 컨텐츠 추가',l:['위기 카드 \'잘못된 얼굴\', \'정체성 분열\', \'엇갈린 신호\', \'뒤바뀐 지도\'를 추가했습니다.','위기 카드  \'빌려온 시간 \',  \'기록되지 않은 희생 \', \'전염되는 광기 \',  \'공명하는 악몽 \',  \'동조 \',  \'불완전한 봉인 \'을 추가했습니다.','위기 카드 \'메아리치는 상처\', \'불안한 군중\', \'시간이 다 됐다\', \'도시가 숨을 쉰다\', \'기억하는 방\', \'불시착\', \'강제 교환\', \'뒤바뀐 균열\'을 추가했습니다.','위기 카드 \'거울 속의 남자\', \'저항하는 균열\', \'잘못된 군중\', \'불신의 공기\', \'환각의 잔영\'을 추가했습니다.']},
- {t:'규칙·밸런스 조정',l:['참여 인원별 개수 돌림판을 조정했습니다 (2인 1~2 1번 / 3~4인 1~2 2번 / 5~6인 1~3 2번).','킬러의 이상 행동 \'충동\'을 수정했습니다. 이제 이상 상태의 킬러는 더이상 인접 지역에 균열 1개를 발생시키지 않습니다.','작가의 능력 \'데우스 엑스 마키나\'가 약화된 균열 판정 실패에도 발동되도록 수정했습니다.']},
- {t:'버그 수정',l:['추적자 \'파일럿\'의 능력 \'공중 지원\'이 상시 발동되던 문제를 수정했습니다.','위기 카드 \'잘못된 군중\'의 협력 보너스가 추적자가 지역에 혼자 있을 때도 적용되던 문제를 수정했습니다.']},
+ {t:'표시 개선',l:['추적자 선택 화면의 UI를 개선했습니다.','균열 소멸 판정 시 주사위 아이콘이 보너스까지 반영된 최종 결과로 나오도록 수정했습니다.','사건 단계의 균열 발생 팝업에서 균열 개수를 합산해 표시하도록 수정했습니다.','추적자의 SAN이 0 미만으로 감소하면 음수로 표기되도록 수정했습니다.','추적자의 SAN이 최대치의 절반 이하이면 숫자가 빨간색으로 표시되도록 수정했습니다.']},
+ {t:'신 컨텐츠 추가',l:['새로운 추적자 \'탐정\'이 도시를 찾아왔습니다. 탐정과 함께 이 도시의 비밀을 파헤쳐보세요!', '위기 카드  \'빌려온 시간 \',  \'기록되지 않은 희생 \', \'전염되는 광기 \',  \'공명하는 악몽 \',  \'동조 \',  \'불완전한 봉인 \'이 추가됐습니다.','위기 카드 \'메아리치는 상처\', \'불안한 군중\', \'시간이 다 됐다\', \'도시가 숨을 쉰다\', \'기억하는 방\', \'불시착\', \'강제 교환\', \'뒤바뀐 균열\'이 추가되었습니다.','위기 카드 \'거울 속의 남자\', \'저항하는 균열\', \'잘못된 군중\', \'불신의 공기\', \'환각의 잔영\'이 추가되었습니다.']},
+ {t:'규칙·밸런스 조정',l:['참여 인원별 개수 돌림판을 조정했습니다 (2인 1~2 1번 / 3~4인 1~2 2번 / 5~6인 1~3 2번).','킬러의 이상 행동 \'충동\'을 수정했습니다. 이제 이상 상태의 킬러는 더이상 인접 지역에 균열 1개를 발생시키지 않습니다.','작가의 데우스 엑스 마키나가 약화된 균열 판정 실패에도 발동되도록 수정했습니다.']},
+ {t:'버그 수정',l:['위기 카드 \'잘못된 군중\'의 협력 보너스가 추적자가 지역에 혼자 있을 때도 적용되던 문제를 수정했습니다.']},
 ];
 function updHtml(){return `<div class="card"><b>업데이트 내역</b><div class="upd">${UPDATES.map(u=>`<h5>${u.t}</h5>${u.l.map(t=>`<div>· ${t}</div>`).join('')}`).join('')}</div></div>`}
 function selPick(k){if(SEL.picks.length>=SEL.count)return;SEL.picks.push(k);render()}
@@ -413,9 +450,11 @@ function confirmHtml(){
 function renderSel(){
  const n=SEL.picks.length;
  return `<div class="card"><div class="bar"><b>${n>=SEL.count?'선택 완료':`추적자 ${n+1} / ${SEL.count} 선택`}</b><button onclick="SEL=null;render()">처음으로</button></div>${SEL.picks.length?`<div class="muted" style="margin-top:6px">${SEL.picks.map((k,i)=>`추적자 ${i+1}: ${CH.find(c=>c.k===k).name}`).join(' · ')}</div>`:''}</div>`+
- CH.map(c=>`<div class="card"><div class="bar"><b>${c.name} <span class="muted">${c.en}</span></b><button class="pri" ${SEL.picks.includes(c.k)?'disabled':''} onclick="selPick('${c.k}')">선택</button></div>
- <div class="muted">${c.pos} · 운용 난이도 ${c.diff} · SAN ${c.san} / ACT ${c.act} / AREA ${AREAS[c.area-1].name}</div>
- <details><summary>추적자 정보</summary><p><b>특성</b> ${c.t}</p><p><b>능력</b> ${c.a}</p><p><b>페널티</b> ${c.p}</p><p><b>이상 행동</b> ${c.x}</p></details></div>`).join('')+(n>=SEL.count?confirmHtml():'');
+ `<div class="sgrid">`+CH.map(c=>`<div class="card"><div class="ph"><img src="images/${c.k}.png" alt="${c.name}" onerror="this.remove()"></div><div class="nm2">${c.name}</div>
+ <div class="sm">${c.pos}</div>
+ <div class="sm">운용 난이도: ${c.diff}</div>
+ <details><summary>추적자 정보</summary><p><b>기본 스탯:</b> SAN ${c.san} / ACT ${c.act} / AREA ${c.area?AREAS[c.area-1].name:'없음'}</p><p><b>특성</b> ${c.t}</p><p><b>능력</b> ${c.a}</p><p><b>페널티</b> ${c.p}</p><p><b>이상 행동</b> ${c.x}</p></details>
+ <div class="pick"><button class="pri" ${SEL.picks.includes(c.k)?'disabled':''} onclick="selPick('${c.k}')">선택</button></div></div>`).join('')+`</div>`+(n>=SEL.count?confirmHtml():'');
 }
 function render(){
  const app=document.getElementById('app');
@@ -435,7 +474,7 @@ function render(){
  });
  h+=`</div>${sideHtml()}</div><div class='card'><div class='bar'><b style='font-size:17px'>${p.name}</b><span style='font-size:15px'>${EMO(p.loc)} ${SIDE(p.loc)}</span></div>
  <div class="bar"><span>🧠 SAN ${sanH(p)}/${p.max}${p.abnormal?' (이상)':''}</span><span>⚡ ACT ${p.act}/${p.act0}</span></div>
- <div class="muted" style="margin:4px 0 8px">${p.ab&&p.ab!==p.k?`🔀능력: ${ABN[p.ab]} `:''}${p.spot?'🔦스포트라이트 ':''}${p.armD?'🎯즉시 제거 대기 ':''}${p.armP?'✈️공중 지원 대기 ':''}${p.arm?'🪄데우스 대기 ':''}${p.supplied?'📦보급 ':''}${p.k==='pilot'&&p.stay>=2&&p.loc===p.last?'⏳역마살 -1 ':''}· 테두리가 초록인 지역을 눌러 이동</div><div class="row">`;
+ <div class="muted" style="margin:4px 0 8px">${p.ab&&p.ab!==p.k?`🔀능력: ${ABN[p.ab]} `:''}${p.spot?'🔦스포트라이트 ':''}${p.armD?'🎯즉시 제거 대기 ':''}${p.armP?'✈️공중 지원 대기 ':''}${p.armT?'🔍탐정의 직감 대기 ':''}${p.arm?'🪄데우스 대기 ':''}${p.supplied?'📦보급 ':''}${p.k==='pilot'&&p.stay>=2&&p.loc===p.last?'⏳역마살 -1 ':''}· 테두리가 초록인 지역을 눌러 이동</div><div class="row">`;
  here.cracks.forEach(c=>{
   if(p.armD)h+=`<button class="pri" ${p.act<2?'disabled':''} onclick="doInstant(${c.id})">🎯 ${c.weak?'약화':'일반'} 즉시 제거 (2 ACT)</button>`;
   else h+=`<button class="pri" ${p.act<1||G.judged.has(c.id)||!canJudge(p.loc)?'disabled':''} onclick="doJudge(${p.loc},${c.id})">${c.weak?'🟡 약화':'🔴 일반'} 균열 소멸 판정</button>`;
@@ -448,16 +487,17 @@ function render(){
  if(!canAbil(p))h+=`<button disabled>🔇 능력 사용 불가 (잘못된 얼굴)</button>`;
  else if(!p.used){
   if(ab(p)==='surgeon')G.players.filter(q=>q.loc===p.loc).forEach(q=>{h+=`<button ${q.san>=q.max?'disabled':''} onclick="doAbility(${q.id})">🩺 응급 치료: ${q.id===p.id?'본인':q.name}</button>`});
-  else h+=`<button ${(ab(p)==='killer'&&!here.cracks.length)||(ab(p)==='investor'&&G.fx.lock)?'disabled':''} onclick="doAbility(0)">✨ ${ABN[ab(p)]}${ab(p)==='investor'&&G.fx.lock?' (엇갈린 신호로 무효)':''}</button>`;
+  else h+=`<button ${(ab(p)==='killer'&&!here.cracks.length)||(ab(p)==='detective'&&!here.cracks.length)||(ab(p)==='investor'&&G.fx.lock)?'disabled':''} onclick="doAbility(0)">✨ ${ABN[ab(p)]}${ab(p)==='investor'&&G.fx.lock?' (엇갈린 신호로 무효)':''}</button>`;
  }
- if(p.arm||p.armD||p.armP)h+=`<button onclick='cancelAbility()'>↩ 능력 사용 취소</button>`;
+ if(p.arm||p.armD||p.armP||p.armT)h+=`<button onclick='cancelAbility()'>↩ 능력 사용 취소</button>`;
  if(p.k!=='surgeon'&&canSR(p.loc))h+=`<button ${p.san>=p.max||G.fx.noRestHeal?'disabled':''} onclick='doRest()'>휴식 (턴 종료)</button>`;
  h+=`<button onclick="doEnd()">턴 종료</button></div></div>`;
  h+=`<div class="card"><div class="log">${G.log.slice(0,12).map(t=>`<div>${t}</div>`).join('')}</div></div>`;
  if(G.pop.length)h+=popHtml(G.pop[0]);else if(G.choice)h+=`<div class="over"><div class="card"><h3>플롯 비틀기</h3><p class="muted">이번 라운드에서 발동할 위기 카드를 선택해주세요</p>${G.choice.map((c,i)=>`<p><button class="pri" onclick="pickCard(${i})">${c.name}</button><br><span class="muted">${c.desc}</span></p>`).join('')}</div></div>`;
  if(!G.pop.length&&!G.choice&&G.sac)h+=sacHtml();
+ if(!G.pop.length&&!G.choice&&!G.sac&&G.det)h+=detHtml();
  if(!G.pop.length&&G.over)h+=overHtml();
- if(!G.pop.length&&!G.choice&&!G.sac&&!G.over){const key=G.round+':'+G.turn;if(G.shown!==key){G.shown=key;h+=`<div class='toast' id='toast'><div><small>${G.round}라운드</small><br><b>${p.name}</b>의 턴</div></div>`;setTimeout(()=>{const t=document.getElementById('toast');if(t)t.remove()},1500)}}
+ if(!G.pop.length&&!G.choice&&!G.sac&&!G.det&&!G.over){const key=G.round+':'+G.turn;if(G.shown!==key){G.shown=key;h+=`<div class='toast' id='toast'><div><small>${G.round}라운드</small><br><b>${p.name}</b>의 턴</div></div>`;setTimeout(()=>{const t=document.getElementById('toast');if(t)t.remove()},1500)}}
  app.innerHTML=h;rollAnim();
 }
 render();
