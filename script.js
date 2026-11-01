@@ -164,7 +164,15 @@ function crackPop(){
   lost:E.lost});
  G.evd=null;
 }
-function cardPop(c){pop({k:'card',title:`${G.round}라운드 · 사건 단계`,card:c,lines:c.draw?(G.col||[]):[]});G.col=null}
+function cardPop(c, onConfirm) {
+  pop({
+    k:'card',
+    title:`${G.round}라운드 · 사건 단계`,
+    card:c,
+    lines:c.draw?(G.col||[]):[]
+  });
+  G.col=null;
+}
 function colPop(secs){pop({k:'col',title:`${G.round}라운드 · 붕괴 단계`,gauge:G.collapse,secs})}
 const surgeonAt=n=>G.players.some(q=>q.k==='surgeon'&&q.loc===n);
 const canSR=n=>!A(n).cracks.length||surgeonAt(n);
@@ -173,7 +181,16 @@ function startGame(picks){
  const players=picks.map((k,i)=>{const c=CH.find(x=>x.k===k);
   return {id:i,k,name:c.name,sh:c.sh,max:c.san,san:c.san,act0:c.act,act:c.act,area:c.area,loc:c.area||7,last:c.area||7,stay:0,abnormal:false,mod:0,used:false,arm:false,armD:false,spot:0,spotBy:null,supplied:false}});
  G={players,areas:AREAS.map(()=>({cracks:[]})),collapse:15,round:0,turn:0,card:null,choice:null,pop:[],col:null,fx:{},map:[1,2,3,4,5,6,7],judged:new Set(),log:[],over:null,extra:0,
-  deck:[...CARDS].sort(()=>Math.random()-.5)};
+  deck: (() => {
+  const deck = [...CARDS];
+
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+
+  return deck;
+})()};
  startRound();
 }
 function addCrack(no){
@@ -189,19 +206,84 @@ function startRound(){
  G.round++;G.turn=0;G.rnote='';
  if(G.fx&&G.fx.swapMap){const sw=G.fx.swapMap;swapMap(sw[0],sw[1]);G.rnote=`뒤바뀐 지도: ${SIDE(sw[0])}, ${SIDE(sw[1])}의 위치가 원래대로 돌아왔습니다`;log(G.rnote)}
  G.fx={};G.players.forEach(p=>{p.act=p.act0;p.ab=null});
- const np=G.players.length,spins=np<=2?1:2,mx=np<=4?2:3;
- log(`── ${G.round}라운드 시작 ──`);G.col=null;G.evd={spins:[],placed:{},rest:{},lost:0};
- for(let s=0;s<spins;s++){const k=rnd(mx);G.evd.spins.push(k);log(`개수: ${k}개`);for(let i=0;i<k;i++)addCrack(rnd(7))}
+  const np = G.players.length;
+
+  const spins = {
+    2: 1,
+    3: 2,
+    4: 3,
+    5: 3,
+    6: 6
+  }[np] || 1;
+ log(`── ${G.round}라운드 시작 ──`);
+ G.col=null;
+ G.evd={spins:[],placed:{},rest:{},lost:0};
+ 
+  for (let s = 0; s < spins; s++) {
+    const r = Math.random() * 100;
+    let k;
+
+    if (np === 3) {
+    // 3인: 1개 60%, 2개 40%
+      k = r < 60 ? 1 : 2;
+    } else if (np === 5) {
+    // 5인: 1개 17%, 2개 50%, 3개 33%
+      if (r < 17) {
+        k = 1;
+      } else if (r < 67) {
+        k = 2;
+      } else {
+        k = 3;
+      }
+    } else {
+    // 2인, 4인, 6인: 1개 50%, 2개 50%
+      k = r < 50 ? 1 : 2;
+    }
+
+  G.evd.spins.push(k);
+  log(`개수: ${k}개`);
+
+  for (let i = 0; i < k; i++) {
+    addCrack(rnd(7));
+  }
+}
  crackPop();
  if(G.players.some(p=>p.k==='writer')&&G.deck.length>=2){G.choice=G.deck.splice(0,2);G.card=null;return}
- const c=G.deck.shift();G.deck.push(c);G.card=c;G.col=[];applyCard(c);cardPop(c);log(`위기 카드: ${c.name}`);
- finishStart();
+const c = G.deck.shift();
+  G.card = c;
+  G.deck.push(c);
+
+  G.col = [];
+  applyCard(c);                 // 효과 먼저 적용
+  cardPop(c);                   // 결과 로그가 담긴 상태로 팝업 표시
+  log(`위기 카드: ${c.name}`);
+
+  finishStart();
+  return;
 }
 function finishStart(){checkEnd();if(!G.over)startTurn()}
-function pickCard(i){
- const keep=G.choice[i],drop=G.choice[1-i];
- G.deck.push(drop,keep);G.card=keep;G.choice=null;log(`플롯 비틀기: ${drop.name} 카드는 덱 맨 아래로`);G.col=[];applyCard(keep);cardPop(keep);log(`위기 카드: ${keep.name} 발동`);
- finishStart();render();
+function pickCard(i) {
+  const keep = G.choice[i];
+  const drop = G.choice[1 - i];
+
+  // 선택하지 않은 카드부터 덱 맨 아래로 이동
+  G.deck.push(drop);
+  log(`플롯 비틀기: ${drop.name} 카드는 덱 맨 아래로`);
+
+  // 선택한 카드의 효과 발동
+  G.card = keep;
+  G.choice = null;
+  G.col = [];
+  applyCard(keep);
+
+  // 효과 발동 후 선택한 카드도 덱 맨 아래로 이동
+  G.deck.push(keep);
+
+  cardPop(keep);
+  log(`위기 카드: ${keep.name} 발동`);
+
+  finishStart();
+  render();
 }
 function startTurn(){
  const p=cur();
@@ -296,62 +378,371 @@ function abnormal(p){
   p.armT=true;judgeCore(p,n,A(n).cracks[0].id,0,true);p.armT=false}
 }
 
-function judgeCore(p,no,id,cost,free){
- const a=A(no),c=a.cracks.find(x=>x.id===id);
- if(!c||G.judged.has(id)||(!free&&p.act<cost))return false;
- if(!canJudge(no)){if(free)log('혼자서는 안 돼: 지역에 추적자가 2명 미만이라 판정을 시도하지 못했다');return false}
- if(!free)p.act-=cost;G.judged.add(id);
- const f=G.fx,cnt=no===p.loc?G.players.filter(q=>q!==p&&q.loc===p.loc&&q.k!=='detective').length:0;
- const coop=p.k==='detective'||f.mirror?0:f.crowd?(cnt>0?1:0):(f.distrust===no?-cnt:cnt);
- const pen=p.k==='pilot'&&p.stay>=2&&p.loc===p.last?1:0;
- const bonus=coop+p.spot-pen,wasWeak=c.weak,mirror=!!f.mirror,notes=[];
- const fails=r=>c.weak?(mirror?r>=5:r<=2):(mirror?r>=4:r<=3);
- const roll=()=>{if(f.resist===no){const a1=rnd(6),a2=rnd(6);notes.push(`저항하는 균열: 주사위 ${a1}, ${a2} 중 낮은 값 적용`);return Math.min(a1,a2)}return rnd(6)};
- if(mirror)notes.push('거울 속의 남자: 판정 범위 반전, 협력 보너스 미적용');
- if(f.crowd)notes.push('잘못된 군중: 같은 지역에 다른 추적자가 있으면 협력 보너스 +1 고정');
- if(f.distrust===no)notes.push('불신의 공기: 같은 지역 추적자 1명당 판정 -1');
- const det=!!p.armT;if(det)p.armT=false;
- const spotV=p.spot;let rr=null,mir=false,raw,r,txt,fail,great,dice=null;
- if(det){
-  const d1=roll(),d2=roll(),sum=d1+d2+bonus,eff=mirror?14-sum:sum;
-  dice=[d1,d2];raw=d1;r=sum;txt=`🎲 ${d1}+${d2}${bonus?(bonus>0?' +':' ')+bonus:''}`;
-  fail=eff<=6;great=eff>=10;
-  notes.push('탐정의 직감: 주사위 2개 합계로 판정 (10 이상 대성공 / 7~9 성공 / 6 이하 실패)');
- }else{
-  raw=roll();r=Math.max(1,Math.min(6,raw+bonus));txt=`🎲 ${raw}${bonus?(bonus>0?' +':' ')+bonus:''}`;
-  if(fails(r)&&p.area===idOf(p.loc)){const rr0=roll(),r2=Math.max(1,Math.min(6,rr0+bonus));rr=rr0;mir=mirror;r=mir?Math.min(r,r2):Math.max(r,r2);txt+=` / AREA 재굴림 ${r2}`}
-  fail=fails(r);great=!c.weak&&(mirror?r<=1:r>=6);
- }
- let res;
- if(fail){
-  let loss=det?2:(c.weak?0:1);
-  res=c.weak?'실패: 약화된 균열 유지':'실패: 균열 약화';c.weak=true;
-  const deus=p.arm;if(deus){p.arm=false;loss=0}
-  if(f.contagion){loss+=1;notes.push('전염되는 광기: SAN 감소량 +1')}
-  G.nt=notes;
-  if(loss>0){loseS(p,loss);res+=`, SAN -${loss}`}
-  if(f.resonance){G.players.forEach(q=>loseS(q,1));notes.push('공명하는 악몽: 모든 추적자 SAN -1');res+=' · 모든 추적자 SAN -1'}
-  G.nt=null;
-  if(deus){p.loc=nextNo(p.loc);res+=`, 데우스 엑스 마키나로 SAN 감소 무효 → ${SIDE(p.loc)} 이동`}
- }else{
-  a.cracks=a.cracks.filter(x=>x!==c);
-  if(great){if(f.noGreatHeal)res='대성공: 균열 소멸 (환각의 잔영: SAN 회복 무시)';else if(wasWeak)res='대성공: 균열 소멸';else{heal(p,1);res='대성공: 균열 소멸, SAN +1'}}else res='성공: 균열 소멸';
-  if(det&&great){
-   const seen=new Set(),opts=[];
-   G.areas.forEach((ar,i)=>ar.cracks.forEach(x=>{const k=(i+1)+':'+x.weak;if(!seen.has(k)){seen.add(k);opts.push({no:i+1,id:x.id,weak:x.weak})}}));
-   if(!opts.length)notes.push('탐정의 직감 대성공: 함께 소멸시킬 균열이 없음');
-   else if(free){const o=opts[rnd(opts.length)-1];removeCrackById(o.no,o.id);const t=`탐정의 직감 대성공: ${SIDE(o.no)}의 ${o.weak?'약화된':'일반'} 균열도 함께 소멸`;notes.push(t);res+=' · '+t}
-   else{G.det={who:p.id,opts};notes.push('탐정의 직감 대성공: 함께 소멸시킬 균열을 선택')}
+function judgeCore(p, no, id, cost, free, onComplete) {
+  const a = A(no);
+  const c = a.cracks.find(x => x.id === id);
+
+  if (!c || G.judged.has(id) || (!free && p.act < cost)) {
+    return false;
   }
-  if(f.seal){const d=rnd(6),n2=nextNo(no);let t=`불완전한 봉인: 추가 주사위 ${d}`;if(d<=2){addCrack(n2);t+=` → ${SIDE(n2)}에 균열 발생`}else t+=' → 변화 없음';notes.push(t);res+=' · '+t}
- }
- if(p.spot&&p.k!=='actress'&&!fail)G.players.filter(q=>q.k==='actress').forEach(q=>heal(q,great?2:1));
- p.spot=0;p.spotBy=null;
- if(p.supplied){const inv=G.players.find(q=>q.k==='investor');if(inv&&!f.lock){if(great)inv.mod+=1;if(fail)inv.mod-=1}p.supplied=false}
- log(`${p.name} 판정 ${txt} = ${r} · ${res}`);pop({k:'dice',who:p.name,where:SIDE(no),wasWeak,raw,rr,mir,coop,spot:spotV,pen,r,res,notes,dice,cap:!det&&(raw+bonus>6||(rr!==null&&rr+bonus>6)),low:!det&&(raw+bonus<1||(rr!==null&&rr+bonus<1))});return true;
+
+  if (!canJudge(no)) {
+    if (free) {
+      log('혼자서는 안 돼: 지역에 추적자가 2명 미만이라 판정을 시도하지 못했다');
+    }
+    return false;
+  }
+
+  const f = G.fx;
+  const cnt = no === p.loc
+    ? G.players.filter(q => q !== p && q.loc === p.loc && q.k !== 'detective').length
+    : 0;
+
+  const coop = p.k === 'detective' || f.mirror
+    ? 0
+    : f.crowd
+      ? (cnt > 0 ? 1 : 0)
+      : (f.distrust === no ? -cnt : cnt);
+
+  const pen = p.k === 'pilot' && p.stay >= 2 && p.loc === p.last ? 1 : 0;
+  const bonus = coop + p.spot - pen;
+  const wasWeak = c.weak;
+  const mirror = !!f.mirror;
+  const notes = [];
+
+  const fails = r => c.weak
+    ? (mirror ? r >= 5 : r <= 2)
+    : (mirror ? r >= 4 : r <= 3);
+
+  const roll = () => {
+    if (f.resist === no) {
+      const a1 = rnd(6);
+      const a2 = rnd(6);
+      notes.push(`저항하는 균열: 주사위 ${a1}, ${a2} 중 낮은 값 적용`);
+      return Math.min(a1, a2);
+    }
+    return rnd(6);
+  };
+
+  if (mirror) {
+    notes.push('거울 속의 남자: 판정 범위 반전, 협력 보너스 미적용');
+  }
+
+  if (f.crowd) {
+    notes.push('잘못된 군중: 같은 지역에 다른 추적자가 있으면 협력 보너스 +1 고정');
+  }
+
+  if (f.distrust === no) {
+    notes.push('불신의 공기: 같은 지역 추적자 1명당 판정 -1');
+  }
+
+  const det = !!p.armT;
+  const spotV = p.spot;
+
+  let rr = null;
+  let mir = false;
+  let raw, r, txt, fail, great, dice = null;
+
+  // 1단계: 주사위를 굴리고 결과만 계산한다.
+  // 이 단계에서는 SAN이나 균열 상태를 변경하지 않는다.
+  if (det) {
+    const d1 = roll();
+    const d2 = roll();
+    const sum = d1 + d2 + bonus;
+    const eff = mirror ? 14 - sum : sum;
+
+    dice = [d1, d2];
+    raw = d1;
+    r = sum;
+
+    txt = `🎲 ${d1}+${d2}${bonus ? (bonus > 0 ? ' +' : ' ') + bonus : ''}`;
+
+    fail = eff <= 6;
+    great = eff >= 10;
+
+    notes.push(
+      '탐정의 직감: 주사위 2개 합계로 판정 (10 이상 대성공 / 7~9 성공 / 6 이하 실패)'
+    );
+  } else {
+    raw = roll();
+    r = Math.max(1, Math.min(6, raw + bonus));
+
+    txt = `🎲 ${raw}${bonus ? (bonus > 0 ? ' +' : ' ') + bonus : ''}`;
+
+    if (fails(r) && p.area === idOf(p.loc)) {
+      const rr0 = roll();
+      const r2 = Math.max(1, Math.min(6, rr0 + bonus));
+
+      rr = rr0;
+      mir = mirror;
+      r = mir ? Math.min(r, r2) : Math.max(r, r2);
+
+      txt += ` / AREA 재굴림 ${r2}`;
+    }
+
+    fail = fails(r);
+    great = !c.weak && (mirror ? r <= 1 : r >= 6);
+  }
+
+  // 팝업에 표시할 예상 결과
+  const previewLoss = fail
+    ? (
+        (det ? 2 : (wasWeak ? 0 : 1))
+        - (p.arm ? (det ? 2 : (wasWeak ? 0 : 1)) : 0)
+        + (f.contagion ? 1 : 0)
+      )
+    : 0;
+
+  const previewRes = fail
+    ? (
+        (wasWeak ? '실패: 약화된 균열 유지' : '실패: 균열 약화')
+        + (previewLoss > 0 ? `, SAN -${previewLoss}` : '')
+        + (f.resonance ? ' · 모든 추적자 SAN -1' : '')
+        + (p.arm ? ', 데우스 엑스 마키나 발동' : '')
+      )
+    : great
+      ? (
+          f.noGreatHeal
+            ? '대성공: 균열 소멸 (SAN 회복 무시)'
+            : wasWeak
+              ? '대성공: 균열 소멸'
+              : '대성공: 균열 소멸, SAN +1'
+        )
+      : '성공: 균열 소멸';
+
+  const result = {
+    k: 'dice',
+    who: p.name,
+    where: SIDE(no),
+    wasWeak,
+    raw,
+    rr,
+    mir,
+    coop,
+    spot: spotV,
+    pen,
+    r,
+    res: previewRes,
+    notes,
+    dice,
+    cap: !det && (
+      raw + bonus > 6 ||
+      (rr !== null && rr + bonus > 6)
+    ),
+    low: !det && (
+      raw + bonus < 1 ||
+      (rr !== null && rr + bonus < 1)
+    ),
+    done: false
+  };
+
+  // 2단계: 팝업에서 확인 버튼을 눌렀을 때만 실제 효과를 적용한다.
+  result.onConfirm = () => {
+    if (!free) {
+      p.act -= cost;
+    }
+
+    G.judged.add(id);
+
+    if (det) {
+      p.armT = false;
+    }
+
+    let res;
+
+    if (fail) {
+      let loss = det ? 2 : (c.weak ? 0 : 1);
+
+      res = c.weak
+        ? '실패: 약화된 균열 유지'
+        : '실패: 균열 약화';
+
+      c.weak = true;
+
+      // 데우스 엑스 마키나
+      const deus = p.arm;
+
+      if (deus) {
+        p.arm = false;
+        loss = 0;
+      }
+
+      // 전염되는 광기
+      if (f.contagion) {
+        loss += 1;
+        notes.push('전염되는 광기: SAN 감소량 +1');
+      }
+
+      G.nt = notes;
+
+      if (loss > 0) {
+        loseS(p, loss);
+        res += `, SAN -${loss}`;
+      }
+
+      // 공명하는 악몽
+      if (f.resonance) {
+        G.players.forEach(q => loseS(q, 1));
+
+        notes.push('공명하는 악몽: 모든 추적자 SAN -1');
+        res += ' · 모든 추적자 SAN -1';
+      }
+
+      G.nt = null;
+
+      if (deus) {
+        p.loc = nextNo(p.loc);
+        res += `, 데우스 엑스 마키나로 SAN 감소 무효 → ${SIDE(p.loc)} 이동`;
+      }
+    } else {
+      // 성공: 균열 제거
+      a.cracks = a.cracks.filter(x => x !== c);
+
+      if (great) {
+        if (f.noGreatHeal) {
+          res = '대성공: 균열 소멸 (환각의 잔영: SAN 회복 무시)';
+        } else if (wasWeak) {
+          res = '대성공: 균열 소멸';
+        } else {
+          heal(p, 1);
+          res = '대성공: 균열 소멸, SAN +1';
+        }
+      } else {
+        res = '성공: 균열 소멸';
+      }
+
+      // 탐정의 직감: 대성공 시 추가 균열 선택
+      if (det && great) {
+        const seen = new Set();
+        const opts = [];
+
+        G.areas.forEach((ar, i) => {
+          ar.cracks.forEach(x => {
+            const k = (i + 1) + ':' + x.weak;
+
+            if (!seen.has(k)) {
+              seen.add(k);
+              opts.push({
+                no: i + 1,
+                id: x.id,
+                weak: x.weak
+              });
+            }
+          });
+        });
+
+        if (!opts.length) {
+          notes.push('탐정의 직감 대성공: 함께 소멸시킬 균열이 없음');
+        } else if (free) {
+          const o = opts[rnd(opts.length) - 1];
+
+          removeCrackById(o.no, o.id);
+
+          const t =
+            `탐정의 직감 대성공: ${SIDE(o.no)}의 ` +
+            `${o.weak ? '약화된' : '일반'} 균열도 함께 소멸`;
+
+          notes.push(t);
+          res += ' · ' + t;
+        } else {
+          G.det = {
+            who: p.id,
+            opts
+          };
+
+          notes.push('탐정의 직감 대성공: 함께 소멸시킬 균열을 선택');
+        }
+      }
+
+      // 불완전한 봉인
+      if (f.seal) {
+        const d = rnd(6);
+        const n2 = nextNo(no);
+
+        let t = `불완전한 봉인: 추가 주사위 ${d}`;
+
+        if (d <= 2) {
+          addCrack(n2);
+          t += ` → ${SIDE(n2)}에 균열 발생`;
+        } else {
+          t += ' → 변화 없음';
+        }
+
+        notes.push(t);
+        res += ' · ' + t;
+      }
+    }
+
+    // 배우의 스포트라이트
+    if (p.spot && p.k !== 'actress' && !fail) {
+      G.players
+        .filter(q => q.k === 'actress')
+        .forEach(q => heal(q, great ? 2 : 1));
+    }
+
+    p.spot = 0;
+    p.spotBy = null;
+
+    // 투자자의 보급 효과
+    if (p.supplied) {
+      const inv = G.players.find(q => q.k === 'investor');
+
+      if (inv && !f.lock) {
+        if (great) inv.mod += 1;
+        if (fail) inv.mod -= 1;
+      }
+
+      p.supplied = false;
+    }
+
+    result.res = res;
+
+    log(`${p.name} 판정 ${txt} = ${r} · ${res}`);
+
+    // 모든 판정 효과를 적용한 다음에만 다음 단계로 진행한다.
+    if (onComplete) {
+      onComplete();
+    }
+  };
+
+  // 주사위 팝업을 먼저 표시한다.
+  pop(result);
+
+  return true;
 }
 const remoteCost=(p,n)=>adjOf(p.loc).includes(n)?1:2;
-function doJudge(no,id){const p=cur(),remote=no!==p.loc;if(remote&&!rem(p))return;if(judgeCore(p,no,id,remote?remoteCost(p,no):1,false)){if(remote)p.armP=false;if(G.det){render();return}after()}}
+function doJudge(no, id) {
+  const p = cur();
+  const remote = no !== p.loc;
+
+  if (remote && !rem(p)) {
+    return;
+  }
+
+  judgeCore(
+    p,
+    no,
+    id,
+    remote ? remoteCost(p, no) : 1,
+    false,
+    () => {
+      if (remote) {
+        p.armP = false;
+      }
+
+      // 탐정의 직감 대성공으로 추가 선택이 필요한 경우
+      // 턴을 종료하지 않고 선택 화면을 표시한다.
+      if (G.det) {
+        render();
+        return;
+      }
+
+      after();
+    }
+  );
+
+  render();
+}
 function removeCrackById(no,id){A(no).cracks=A(no).cracks.filter(x=>x.id!==id)}
 function pickDet(i){
  const o=G.det.opts[i];G.det=null;removeCrackById(o.no,o.id);
@@ -393,7 +784,15 @@ function doAbility(i){
 }
 
 const FACES=['⚀','⚁','⚂','⚃','⚄','⚅'];
-function popNext(){G.pop.shift();render()}
+function popNext() {
+  const o = G.pop.shift();
+
+  if (o && o.onConfirm) {
+    o.onConfirm();
+  }
+
+  render();
+}
 function popHtml(o){
  if(o.k==='dice'){
   const det=`<div class="pl"><div>${o.who} · ${o.where} · ${o.wasWeak?'약화된 균열':'일반 균열'}</div><div>주사위 ${o.dice?`${o.dice[0]} + ${o.dice[1]}`:o.raw}${o.coop?` ${o.coop>0?'+':'−'} 협력 ${Math.abs(o.coop)}`:''}${o.spot?` + 스포트라이트 ${o.spot}`:''}${o.pen?` − 역마살 ${o.pen}`:''}</div>${o.rr!==null?`<div>AREA 보너스 재굴림: ${o.rr} → ${o.mir?'낮은':'높은'} 수 적용</div>`:''}${(o.notes||[]).map(t=>`<div class="muted">${t}</div>`).join('')}<div><b>${o.dice?'합계':'최종'} ${o.r}</b>${o.cap&&o.r===6?' (최대 6으로 조정)':''}${o.low&&o.r===1?' (최소 1로 조정)':''} · ${o.res}</div></div>`;
@@ -429,7 +828,7 @@ function showInfo(i){
 function askReset(){document.getElementById('modal').innerHTML=`<div class='over'><div class='card' style='max-width:420px'><h3>게임 초기화</h3><p class='muted'>현재 게임은 포기 처리되고 추적자 인원 선택 화면으로 돌아갑니다. 진행할까요?</p><div class='row' style='justify-content:center'><button class='pri' onclick='doReset()'>초기화</button><button onclick='hideRules()'>취소</button></div></div></div>`}
 function doReset(){hideRules();G=null;SEL=null;render()}
 function hideRules(){document.getElementById('modal').innerHTML=''}
-function showRules(){document.getElementById('modal').innerHTML=`<div class='over'><div class='card wide rules'><h3 style='text-align:center;margin:0'>규칙 요약</h3>
+function showRules(){document.getElementById('modal').innerHTML=`<div class='over'><div class='card wide rules'><h3 style='text-align:center;margin:0'>HOW TO PLAY</h3>
 <h4>승리 · 패배</h4><ul><li>도시 붕괴도는 15에서 시작합니다.</li><li>도시 붕괴도가 0에 도달하면 승리하며, 도시 붕괴도가 30에 도달하거나 모든 추적자가 이상 상태가 되면 패배합니다.</li></ul>
 <h4>라운드 흐름</h4><ul><li>① 사건 단계 → ② 행동 단계(추적자 순서대로 턴) → ③ 붕괴 단계 순으로 반복합니다.</li></ul>
 <h4>① 사건 단계</h4><ul><li>개수 돌림판을 돌린 뒤, 나온 개수만큼 장소 돌림판을 돌립니다. 돌림판을 돌려 나온 결과대로 균열이 발생합니다. 2인은 1~2 중 1번, 3~4인은 1~2 중 2번, 5~6인은 1~3 중 2번 돌립니다.</li><li>한 지역에 발생할 수 있는 균열은 최대 3개입니다. 이미 균열이 3개 있는 지역에 균열이 또 발생한다면 다음 번호 지역에 발생하며, 해당 지역도 이미 균열이 3개 있다면 인접 지역 중 번호가 낮은 지역에 발생합니다. 모든 지역에 균열이 3개 있다면 해당 균열은 발생하지 않는 대신 붕괴도가 즉시 0.5 오릅니다.</li><li>약화된 균열이 있는 지역에 균열이 추가될 때는 일반 균열이 새로 발생하지 않고, 약화된 균열이 일반 균열로 회복됩니다.</li><li>위기 카드는 인원수와 관계없이 1장을 뽑습니다. 위기 카드의 효과는 해당 라운드에만 적용되며, 라운드가 넘어가면 소멸됩니다.</li></ul>
@@ -437,6 +836,208 @@ function showRules(){document.getElementById('modal').innerHTML=`<div class='ove
 <h4>판정</h4><ul><li>일반 균열: 1~3 실패(약화 균열로 변하고 SAN -1), 4~5 성공(소멸), 6 대성공(소멸, SAN +1).</li><li>약화된 균열: 1~2 실패(유지), 3~6 성공(소멸).</li><li>AREA 보너스: 해당 추적자의 AREA 지역에서 균열 소멸 판정에 실패하면 주사위를 한 번 더 굴려 더 높은 수를 적용합니다. (예외로 위기 카드 \'거울 속의 남자\' 의 효과가 적용되고 있을 때는 더 낮은 수를 적용합니다.)</li><li>협력 보너스: 본인을 제외하고 같은 지역에 있는 다른 추적자 1명당 주사위 값에 1이 더해집니다.</li></ul>
 <h4>③ 붕괴 단계</h4><ul><li>균열 전체 개수에 따라 붕괴도가 변합니다. 0개 -2 / 1개 -1 / 2개 변화 없음 / 3개 +1 / 4개 이상 +2.</li><li>일반 균열이 있는 지역의 다음 번호 지역에 일반 균열이 1개 확산됩니다. 약화된 균열은 확산하지 않으며, 확산의 영향을 받는 지역에 약화된 균열이 있으면 약화된 균열이 일반 균열로 회복됩니다.</li><li>라운드 종료 시 SAN이 0 이하인 추적자는 다음 라운드부터 이상 상태가 되어 고유한 이상 행동만 합니다. SAN이 1 이상으로 회복되면 이상 상태에서 벗어납니다.</li></ul>
 <div style='text-align:center;margin-top:12px'><button class='pri' onclick='hideRules()'>닫기</button></div></div></div>`}
+
+let rulesPage = 0;
+
+const RULE_PAGES = [
+`<h4>붕괴된 도시에 오신 것을 환영합니다.</h4>
+<ul>
+<li>여기는 1925년 뉴욕. 이 도시는 현재 '균열'이라고 불리는, 원인을 알 수 없는 현실 붕괴 현상에 잠식되고 있습니다.<br>
+당신은 시간이 반복되고, 기억이 사라지며, 공간이 뒤틀리는 이 도시가 완전히 무너지기 전에 원인을 해결해야 합니다.<br>
+하지만 명심하세요. <b>모든 것을 구할 수는 없습니다.</b></li>
+</ul>`,
+
+`<h4>1. 보드판 구성</h4>
+<img src="images/map.png"
+     alt="이동 규칙 설명"
+     style="width:100%;max-width:350px;display:block;margin:12px auto;border-radius:8px;">
+<ul>
+<li>보드판은 총 7개의 지역으로 구성되어 있습니다. 추적자는 자신의 AREA에서 게임을 시작합니다. (AREA 보너스에 대해서는 5-2.판정 보너스를 참고해 주세요.) 
+1번 지역인 '병원'을 시작으로 해서 시계 방향으로 번호가 매겨지며, 가운데에 있는 '광장'이 7번 지역이 됩니다.<br><br></li>
+</ul>
+<ul>
+<li>- 1번 지역 <b>병원(Hospital)</b>: '공항', '브로드웨이', '광장'과 인접합니다.</li>
+<li>- 2번 지역 <b>공항(Airport)</b>: '병원', '월스트리트', '광장'과 인접합니다.</li>
+<li>- 3번 지역 <b>월스트리트(Wall Street)</b>: '공항', '도서관', '광장'과 인접합니다.</li>
+<li>- 4번 지역 <b>도서관(Library)</b>: '월스트리트', '항구', '광장'과 인접합니다.</li>
+<li>- 5번 지역 <b>항구(Harbor)</b>: '도서관', '브로드웨이', '광장'과 인접합니다.</li>
+<li>- 6번 지역 <b>브로드웨이(Broadway)</b>: '병원', '항구', '광장'과 인접합니다.</li>
+<li>- 7번 지역 <b>광장(Plaza)</b>: 모든 지역과 인접하여 어느 지역에서든 이동할 수 있습니다. AREA 보너스가 없는 추적자들은 이 지역에서 게임을 시작합니다.</li>
+</ul>`,
+
+`<h4>2. 기본 규칙</h4>
+<ul>
+<h4>2-1. 기본 개념</h4>
+</ul>
+<ul>
+<li>《붕괴된 도시》는 <b>여러 라운드를 반복하며</b> 진행하는 게임입니다.</li>
+<li>각 라운드는 균열을 발생시키고 위기 카드의 효과를 적용하는 <b>사건 단계</b>로 시작되며, 이후 추적자가 행동하는 <b>행동 단계</b>로 진입합니다.
+추적자 한 명이 자신의 행동을 수행하는 과정을 <b>턴</b>이라고 하는데, 모든 추적자가 자신의 턴을 한 번씩 진행하면 하나의 라운드가 종료됩니다.</li>
+<li>라운드가 종료되면 일종의 정산 단계인 <b>붕괴 단계</b>를 거친 뒤 다음 라운드가 시작됩니다. 이러한 과정을 게임이 승리 혹은 패배로 종료될 때까지 반복합니다.</li>
+</ul>
+<ul><br>
+<h4>2-2. 스탯 시스템</h4>
+</ul>
+<ul>
+<li>모든 추적자는 <b>정신력(SAN), 행동력(ACT), 지역 보정(AREA)</b>이라는 세 가지 기본 스탯을 가집니다.</li>
+<li>- <b>정신력(SAN)</b>: 추적자가 정신적으로 버틸 수 있는 정도를 나타냅니다. 5가 평균입니다.<br>
+- <b>행동력(ACT)</b>: 한 턴에 수행할 수 있는 행동의 양을 나타냅니다. 3이 평균입니다.<br>
+- <b>지역 보정(AREA)</b>: 특정 지역에서 추가적인 판정 보너스를 받을 수 있는지를 나타냅니다. 모든 추적자는 자신의 AREA에서 시작하며, AREA가 없는 추적자는 7번 지역 '광장'에서 시작합니다.</li>
+</ul>`,
+
+`<h4>3. 라운드 진행</h4>
+<ul>
+<li>하나의 라운드는 사건 단계, 행동 단계, 붕괴 단계의 세 단계로 구성됩니다.</li>
+</ul>
+<h4>3-1. 사건 단계</h4>
+<ul>
+<li>새로운 라운드가 시작되면 먼저 <b>개수 돌림판</b>과 <b>장소 돌림판</b>을 사용해 보드에 <b>균열</b>을 생성합니다. 
+개수 돌림판을 먼저 돌려 균열의 발생 개수를 결정한 다음, 결정된 횟수만큼 장소 돌림판을 돌려 균열이 발생할 지역을 정합니다. 
+장소 돌림판에서 선택된 지역에는 <b>일반 균열(🔴)</b>이 생성됩니다.</li>
+<br>
+<li>한 지역에 생성될 수 있는 균열은 종류 상관없이 <b>최대 3개까지</b>입니다. 
+이미 균열이 3개 존재하는 지역에 추가 균열이 발생할 경우에는 <b>다음 번호의 지역으로 분산하여 생성합니다.</b>
+<br>- 예를 들어 이미 균열이 3개 존재하는 병원에 다시 균열이 발생하면, 해당 균열은 다음 번호인 2번 지역 '공항'에 생성됩니다. 
+만약 공항에도 이미 균열이 3개 존재한다면, 남은 인접한 지역(6번 지역 브로드웨이, 7번 지역 광장) 중 <b>번호가 가장 낮은 지역</b>인 6번 지역 '브로드웨이'로 분산됩니다. 
+브로드웨이 역시 균열이 3개라면 7번 지역 '광장'에 분산됩니다.
+<br>- 모든 인접 지역에 이미 균열이 3개씩 존재한다면, 해당 균열은 생성되지 않고 <b>소멸</b>하며, 대신 <b>도시 붕괴도가 즉시 0.5 증가</b>합니다.
+<br>- 균열이 발생해야 하는 지역에 이미 약화된 균열(🟡)이 존재한다면, 새로운 일반 균열을 추가하는 대신 <b>기존 약화된 균열이 일반 균열로 회복</b>됩니다.</li><br>
+<li>균열 생성이 완료되면 <b>위기 카드 한 장</b>을 뽑아 공개합니다. 공개된 카드의 효과는 해당 라운드에만 적용되며, 라운드가 종료되면 위기 카드의 효과 역시 소멸합니다.
+<br>- 위기 카드는 참여 인원수와 관계없이 <b>매 라운드 한 장만</b> 뽑습니다.
+<br>- 추적자 중 ‘작가’가 있다면 위기 카드를 두 장 공개한 뒤, 그 중 한 장을 선택해 효과를 적용합니다.</li>
+</ul>`,
+
+`<h4>3-2. 행동 단계</h4>
+<ul>
+<li>사건 단계가 끝나면 각 추적자는 자신의 <b>턴</b>을 진행합니다. 
+추적자는 보유한 ACT를 사용하여 이동하거나 균열을 제거하고, 다른 추적자를 지원할 수 있습니다. 
+단, ACT가 0이 되는 순간 해당 추적자의 턴은 <b>즉시 종료되며</b>, ACT를 소모하지 않는 행동이라 하더라도 추가로 수행할 수 없습니다.</li><br>
+<li>🟢 <b>이동(1 ACT 소모)</b>: 현재 위치에서 인접한 지역으로 이동할 수 있습니다. 
+<br>- 보드판에서 추적자가 이동할 수 있는 지역은 <span style="color:	#228B22;">초록색 윤곽선</span>을 가지고 있습니다.</li><br>
+<li>🔴 <b>균열 소멸 판정(1 ACT 소모)</b>: 자신이 위치한 지역에 있는 균열을 대상으로 주사위를 굴려 소멸 여부를 판정할 수 있습니다. 
+<br>- 한 추적자는 자신의 턴에 동일한 균열을 대상으로 두 번 이상 판정을 시도할 수 없습니다. 
+<br>- 한 번 판정을 진행한 균열은 판정 결과에 관계없이 해당 턴 동안 다시 판정 대상으로 선택할 수 없습니다.</li><br>
+<li>💉 <b>지원(1 ACT 소모)</b>: 자신과 같은 지역에 있는 다른 추적자 한 명의 SAN을 1 회복시킵니다. 
+<br>- 해당 행동은 균열이 존재하지 않는 지역에서만 할 수 있습니다. (단, 지역에 ‘외과의사’가 있을 경우 균열 여부를 무시합니다.)</li><br>
+<li>✨ <b>능력 사용(ACT 소모 없음)</b>: 자신의 고유 능력을 사용합니다.
+<br>- 별도의 설명이 없는 한 각 추적자는 자신의 턴에 능력을 한 번만 사용할 수 있습니다.
+<br>- 일부 추적자는 능력을 사용하기 전 대기 상태일 때 능력 사용을 취소할 수 있습니다.</li><br>
+<li>💤 <b>휴식(ACT 소모 없음)</b>: 자신의 SAN을 1 회복합니다. 
+<br>- 휴식을 선택하면 남아 있는 ACT가 있더라도 해당 추적자의 턴은 즉시 종료됩니다. 
+<br>- 지원과 마찬가지로 균열이 존재하지 않는 지역에서만 할 수 있습니다. (단, 지역에 ‘외과의사’가 있을 경우 균열 여부를 무시합니다.)</li>
+</ul>`,
+
+`<h4>3-3. 붕괴 단계</h4>
+<ul>
+<li>모든 추적자의 행동이 종료되면 일종의 정산인 <b>붕괴 단계</b>에 진입합니다. 붕괴 단계에서는 다음 세 가지 절차를 진행합니다.</li><br>
+<li><b>도시 붕괴도 조정</b>: 보드에 남아 있는 균열(약화된 균열 포함)의 전체 개수에 따라 도시 붕괴도가 조정됩니다.
+<br>- 0개: 2 감소 / 1개: 1 감소 / 2개: 변화 없음 / 3개: 1 증가 / 4개 이상: 2 증가 
+<br>- 도시 붕괴도는 추적자의 수와 관계없이 게임 시작 시 15에서 시작합니다.</li><br>
+<li><b>확산</b>: 일반 균열이 존재하는 지역의 다음 번호 지역에 일반 균열을 1개 추가합니다.
+<br>- 각 지역에는 이 과정을 통해 한 번에 최대 1개의 균열만 새롭게 추가됩니다. 
+<br>- 약화된 균열만 존재하는 지역은 균열 확산의 기준이 되지 않으므로 이 과정을 진행하지 않습니다.
+<br>- 균열이 확산될 다음 번호 지역에 약화된 균열이 이미 존재한다면, 그 옆에 새로운 일반 균열이 추가되는 것이 아닌, 기존 약화된 균열이 일반 균열로 회복됩니다. 
+이때 회복된 일반 균열은 해당 붕괴 단계에서 추가 확산을 일으키지 않으며, 다음 라운드의 붕괴 단계까지 소멸되지 않고 남아 있다면 그때부터는 다른 일반 균열과 동일하게 정상적으로 확산을 진행합니다.</li><br>
+<li><b>추적자 상태 확인</b>: 각 추적자들의 SAN을 확인합니다. 라운드 종료 시점에 SAN이 0 이하인 추적자는 다음 라운드부터 <b>이상 상태</b>에 진입합니다. 
+<br>- 이상 상태에 들어간 추적자는 자신의 턴에 일반적인 행동을 수행할 수 없으며, 지정된 <b>이상 행동</b>만 수행할 수 있습니다. 
+<br>- 다른 추적자의 지원 등을 통해 SAN을 회복하여 붕괴 단계 종료 시점에 SAN이 1 이상이 되면 이상 상태에서 벗어날 수 있습니다.</li>
+</ul>`,
+
+`<h4>4. 판정 시스템</h4>
+<ul>
+<h4>4-1. 기본 판정</h4>
+</ul>
+<ul>
+<li>추적자가 균열 소멸을 시도할 경우, ACT 1을 소모하고 6면체 주사위 한 개를 굴려 결과를 확인합니다. 
+판정 결과는 대상 균열의 상태에 따라 다르게 적용됩니다.</li><br>
+<li>🔴 <b>일반 균열</b> 
+<br>- 1, 2, 3: 실패(균열 약화, 해당 추적자 SAN 1 감소)
+<br>- 4, 5: 보통 성공(균열 즉시 소멸, 해당 추적자 SAN 변화 없음)
+<br>- 6: 대성공(균열 소멸, 해당 추적자 SAN 1 증가, 이미 SAN이 최대치에 도달한 상태라면 추가적인 SAN 회복 효과는 적용되지 않음).</li><br>
+<li>🟡 <b>약화된 균열</b> 
+<br>- 1, 2: 실패(균열 유지)
+<br>- 3, 4, 5, 6: 성공(균열 소멸).</li><br>
+</ul>
+<ul>
+<h4>4-2. 판정 보너스</h4>
+</ul>
+<ul>
+<li>균열 소멸 판정에는 <b>AREA 보너스</b>와 <b>협력 보너스</b>가 적용될 수 있습니다.</li><br>
+<li>🎲 <b>AREA 보너스</b>: 추적자의 AREA와 현재 위치한 지역이 일치할 때 적용됩니다. 
+해당 추적자는 기본 주사위 판정에서 실패가 나왔을 경우 주사위를 한 번 더 굴릴 수 있으며, 두 번의 결과 중 더 높은 숫자를 최종 판정에 적용합니다.</li><br>
+<li>🎲 <b>협력 보너스</b>: 같은 지역에 다른 추적자가 함께 있을 때 적용됩니다.
+판정을 시도하는 추적자 본인을 제외하고 같은 지역에 있는 추적자 한 명당 최종 주사위 값에 1을 더합니다. 
+<br>- 예를 들어 판정을 시도하는 추적자 외에 같은 지역에 두 명의 추적자가 더 있다면, 주사위를 굴려 나온 숫자에 2를 더합니다. 
+처음 주사위 결과가 2였다면 협력 보너스를 적용한 최종 결과는 4가 됩니다.<li>
+</ul>`,
+
+`<h4>5. 게임 종료 조건</h4>
+<ul>
+<li><b>도시 붕괴도가 0에 도달</b>하면 <span style="color:#ffff00;"><b>추적자들의 승리</b></span>로 게임이 종료됩니다.</li>
+<li>반대로 <b>도시 붕괴도가 30에 도달</b>하거나, <b>모든 추적자가 이상 상태에 진입</b>하면 <span style="color:#ff0000;"><b>추적자들의 패배</b></span>로 게임이 종료됩니다.</li>
+</ul>
+`
+];
+
+function renderRulesPage() {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+
+  const last = RULE_PAGES.length - 1;
+
+  modal.innerHTML = `
+    <div class="over">
+      <div class="card wide rules"
+           style="max-height:85vh;display:flex;flex-direction:column">
+
+        <h3 style="text-align:center;margin:0 0 8px">
+          규칙 요약
+        </h3>
+
+        <div style="overflow-y:auto;min-height:0;flex:1;padding:0 4px">
+          ${RULE_PAGES[rulesPage]}
+        </div>
+
+        <div class="muted"
+             style="text-align:center;margin-bottom:8px">
+          페이지 ${rulesPage + 1} / ${RULE_PAGES.length}
+        </div>
+
+        <div class="row"
+             style="justify-content:center;align-items:center;flex-wrap:wrap;margin-top:12px">
+
+          <button onclick="changeRulesPage(-1)"
+                  ${rulesPage === 0 ? 'disabled' : ''}>
+            이전
+          </button>
+
+          <button onclick="changeRulesPage(1)"
+                  ${rulesPage === last ? 'disabled' : ''}>
+            다음
+          </button>
+
+          <button class="pri" onclick="hideRules()">
+            닫기
+          </button>
+
+        </div>
+      </div>
+    </div>`;
+}
+
+function changeRulesPage(step) {
+  rulesPage = Math.max(
+    0,
+    Math.min(RULE_PAGES.length - 1, rulesPage + step)
+  );
+
+  renderRulesPage();
+}
+
+function showRules() {
+  rulesPage = 0;
+  renderRulesPage();
+}
 function cancelAbility(){
  const p=cur();
  if(!p.arm&&!p.armD&&!p.armP&&!p.armT)return;
@@ -515,7 +1116,27 @@ function render(){
  if(!G.pop.length&&!G.choice&&G.sac)h+=sacHtml();
  if(!G.pop.length&&!G.choice&&!G.sac&&G.det)h+=detHtml();
  if(!G.pop.length&&G.over)h+=overHtml();
- if(!G.pop.length&&!G.choice&&!G.sac&&!G.det&&!G.over){const key=G.round+':'+G.turn;if(G.shown!==key){G.shown=key;h+=`<div class='toast' id='toast'><div><small>${G.round}라운드</small><br><b>${p.name}</b>의 턴</div></div>`;setTimeout(()=>{const t=document.getElementById('toast');if(t)t.remove()},1500)}}
+ if(!G.pop.length&&!G.choice&&!G.sac&&!G.det&&!G.over){
+  const key=G.round+':'+G.turn;
+
+  if(G.shown!==key){
+    G.shown=key;
+
+    const toastId=`toast-${G.round}-${G.turn}`;
+
+    h+=`<div class='toast' id='${toastId}'>
+      <div>
+        <small>${G.round}라운드</small><br>
+        <b>${p.name}</b>의 턴
+      </div>
+    </div>`;
+
+    setTimeout(()=>{
+      const t=document.getElementById(toastId);
+      if(t)t.remove();
+    },1500);
+  }
+}
  app.innerHTML=h;rollAnim();
 }
 render();
